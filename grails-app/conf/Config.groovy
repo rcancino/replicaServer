@@ -173,3 +173,6 @@ grails.config.defaults.locations = [KickstartResources]
 grails.plugins.springsecurity.userLookup.userDomainClassName = 'com.luxor.security.User'
 grails.plugins.springsecurity.userLookup.authorityJoinClassName = 'com.luxor.security.UserRole'
 grails.plugins.springsecurity.authority.className = 'com.luxor.security.Role'
+
+grails.plugins.springBatch.loadTables=true
+grails.plugins.springBatch.database='h22'

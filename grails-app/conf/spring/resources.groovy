@@ -1,7 +1,10 @@
 import grails.util.Environment
 import org.apache.commons.dbcp.BasicDataSource
+import org.springframework.batch.core.scope.StepScope;
+import org.springframework.batch.item.database.HibernateItemWriter;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource
 import org.springframework.jdbc.datasource.lookup.BeanFactoryDataSourceLookup
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
 // Place your Spring DSL code here
 beans = {
@@ -16,10 +19,16 @@ beans = {
 				password="sys"
 				suppressClose="false"
 			}
+			
 		break
 	}
 
 	dataSourceLookup(BeanFactoryDataSourceLookup){
 		
 	}
+	
+	stepScope(StepScope){}
+	
+	
+
 }
