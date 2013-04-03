@@ -21,6 +21,9 @@ class BootStrap {
 			}
     	}
     }
+	
     def destroy = {
     }
+	
+	//def insertarReplicaConfig(){}
 }
