@@ -1,114 +1,24 @@
 package com.luxsoft.replica
 
-import org.apache.commons.lang.exception.ExceptionUtils;
-import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import java.util.List;
 
-import groovy.sql.Sql
-
-/**
- * HomeReplicaController
- * A controller class handles incoming web requests and performs actions such as redirects, rendering views and so on.
- */
-class ReplicaController {
-	 
-	def tacubaDataSource
-	def oficinasDataSource
-
-	def index(){
-		redirect action:"importarAuditLog"
-	}
+class EntityModelFactory {
 	
-	def test(){
-		//SimpleJdbcInsert insert=new SimpleJdbcInsert(oficinasDataSource).withTableName("SX_VENTAS")
-		//insert.compile();
-		//render insert.getInsertString() 
-		
-		Sql target=new Sql(oficinasDataSource)
-		def res="UPDATE SX_INVENTARIO_TRS SET "
-		target.eachRow("select * from SX_INVENTARIO_TRS where 1=2 ", {meta->
-			//res+=meta
-			//meta.keySet.each {res+=it}
-			//[1..meta.getColumnCount()].each{ res+=it}
-			String colId=""
-			for(int i=1;i<=meta.getColumnCount();i++){
-				String ccol=meta.getColumnLabel(i)
-				res+=ccol+"=:"+ccol
-				if(i<meta.getColumnCount()+1)
-					res+=","
-				
-			}
-			res+=" WHERE $colId=:$colId"	
-		  }) {}
-		
-		render res
-	}
+	def static models=[:]
 	
-	def importarAuditLog(){
-		
-		Sql sql=new Sql(tacubaDataSource)
-		Sql target=new Sql(oficinasDataSource)
-		
-		//def rows=sql.rows("select * from audit_log where replicado is null order by id")
-		sql.eachRow("select * from audit_log where replicado is null order by id") {
-		//rows.each {
-			def model=EntityModelFactory.getModel(it.entityName)
-			if(model){
-				
-				def origenSql="select * from $model.table where $model.columnId=?"
-				def row=sql.firstRow(origenSql, [it.entityId])
-				if(it.action=='INSERT'){
-					println 'Insertando registro: '+row
-					try{
-						SimpleJdbcInsert insert=new SimpleJdbcInsert(oficinasDataSource).withTableName(model.table)
-						model.excludeColumns.each{
-							row.put(it,null)
-						}
-						insert.execute(row)
-						sql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["",it.id])
-					}catch(Exception e){
-						
-						String err=ExceptionUtils.getRootCauseMessage(e)+ " Tipo: "+ExceptionUtils.getRootCause(e).getClass().getName()
-						println 'Error insertando: '+err
-						sql.execute("UPDATE AUDIT_LOG SET MESSAGE=? WHERE ID=? ", [err,it.id])
-						
-					}
-					
-				}else if(it.action=='UPDATE'){
-					println 'Update: '+row
-					try{
-						int updated=target.executeUpdate(row, model.updateSql)
-						if(updated)
-							sql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["",it.id])
-					}catch(Exception e){
-						String err=ExceptionUtils.getRootCauseMessage(e)+ " Tipo: "+ExceptionUtils.getRootCause(e).getClass().getName()
-						println 'Error en update: '+it+"  "+err
-						sql.execute("UPDATE AUDIT_LOG SET MESSAGE=? WHERE ID=? ", [err,it.id])
-					}
-					
-				}else if(it.action=='DELETE'){
-					target.execute("DELETE FROM $model.table WHERE $model.columnId=?", [it.id])
-				}
-				//println "Importando" +origenSql
-			}else{
-				sql.execute("UPDATE AUDIT_LOG SET MESSAGE=? WHERE ID=? ", ['NO REPLICABLE POR FALTA DE CONFIGURACION',it.id])
-			}
-			
-		}
-		render 'Audit Log importados: '
-	}
-	/*
 	
-	def getModel(String name){
+	
+	static getModel(String name){
 		switch (name) {
-		case "Existencia":
-			return new EntityModel(name:name,table:"SX_EXISTENCIAS"
-			,columnId:"INVENTARIO_ID"
-			,insertSql:"""INSERT INTO SX_EXISTENCIAS
+			case "Existencia":
+				return new EntityModel(name:name,table:"SX_EXISTENCIAS"
+				,columnId:"INVENTARIO_ID"
+				,insertSql:"""INSERT INTO SX_EXISTENCIAS
 					(INVENTARIO_ID,CANTIDAD,CLAVE,COSTO,COSTOP,COSTOU,CREADO,CREADO_USERID,DESCRIPCION,FACTORU,FECHA,TX_IMPORTADO,KILOS,MES,MODIFICADO,NACIONAL,RECORTE,RECORTE_COMENTARIO,RECORTE_FECHA,TX_REPLICADO,UNIDAD,MODIFICADO_USERID,version,YEAR,SUCURSAL_ID
 					,PRODUCTO_ID)
 			
 				"""
-			,updateSql:"""
+				,updateSql:"""
 					UPDATE SX_EXISTENCIAS SET
 					SUCURSAL_ID=:SUCURSAL_ID,PRODUCTO_ID=:PRODUCTO_ID
 					,CLAVE=:CLAVE,MES=:MES,YEAR=:YEAR,CANTIDAD=:CANTIDAD
@@ -122,35 +32,35 @@ class ReplicaController {
 					,TX_IMPORTADO=:TX_IMPORTADO,TX_REPLICADO=:TX_REPLICADO,RECORTE_COMENTARIO=:RECORTE_COMENTARIO,RECORTE_FECHA=:RECORTE_FECHA 
 					WHERE INVENTARIO_ID=:INVENTARIO_ID
 				"""
-			)
-			//break;
-		case "Movimiento":
-			return new EntityModel(name:name,table:"SX_MOVI"
-				,columnId:"MOVI_ID"
-				,insertSql:"""
+				)
+				//break;
+			case "Movimiento":
+				return new EntityModel(name:name,table:"SX_MOVI"
+					,columnId:"MOVI_ID"
+					,insertSql:"""
 					"""
-				,updateSql:"""
+					,updateSql:"""
 					UPDATE SX_MOVI SET COMENTARIO=:COMENTARIO,CONCEPTO=:CONCEPTO,FECHA=:FECHA,CREADO=:CREADO,MODIFICADO=:MODIFICADO,version=:version,DOCUMENTO=:DOCUMENTO,TX_IMPORTADO=:TX_IMPORTADO,TX_REPLICADO=:TX_REPLICADO,PORINVENTARIO=:PORINVENTARIO
 					WHERE MOVI_ID:MOVI_ID
 					"""
-			)
-		case "MovimientoDet":
-			return new EntityModel(name:name,table:"SX_INVENTARIO_MOV"
-				,columnId:"INVENTARIO_ID"
-				,insertSql:"""
+				)
+			case "MovimientoDet":
+				return new EntityModel(name:name,table:"SX_INVENTARIO_MOV"
+					,columnId:"INVENTARIO_ID"
+					,insertSql:"""
 					
 					"""
-				,updateSql:"""
+					,updateSql:"""
 					UPDATE SX_INVENTARIO_MOV SET CANTIDAD=:CANTIDAD,CLAVE=:CLAVE,COMENTARIO=:COMENTARIO,COSTO=:COSTO,COSTOP=:COSTOP,COSTOU=:COSTOU,CREADO=:CREADO,DESCRIPCION=:DESCRIPCION,DOCUMENTO=:DOCUMENTO,FACTORU=:FACTORU,FECHA=:FECHA,MODIFICADO=:MODIFICADO,NACIONAL=:NACIONAL,RENGLON=:RENGLON,version=:version,COMENTARIO2=:COMENTARIO2,CONCEPTO=:CONCEPTO,KILOS=:KILOS,EXISTENCIA=:EXISTENCIA,TIPO_CIS=:TIPO_CIS 
 					WHERE MOVI_ID=:MOVI_ID
 					"""
-			)
-		case "Venta":
-			return new EntityModel(name:name,table:"SX_VENTAS"
-			,columnId:"CARGO_ID"
-			,insertSql:"""
+				)
+			case "Venta":
+				return new EntityModel(name:name,table:"SX_VENTAS"
+				,columnId:"CARGO_ID"
+				,insertSql:"""
 					"""
-			,updateSql:"""
+				,updateSql:"""
 					UPDATE SX_VENTAS SET TIPO=:TIPO,CARGO_ID=:CARGO_ID,CARGOS=:CARGOS,CLAVE=:CLAVE,COMENTARIO=:COMENTARIO
 					,COMENTARIO2=:COMENTARIO2,COMENTARIO_REP_PAGO=:COMENTARIO_REP_PAGO,DESCRI_CARGO=:DESCRI_CARGO
 					,DESCUENTO=:DESCUENTO,DIA_DEL_PAGO=:DIA_DEL_PAGO,DIA_PAGO=:DIA_PAGO,DIA_DE_REV=:DIA_DE_REV,DOCTO=:DOCTO
@@ -167,15 +77,15 @@ class ReplicaController {
 					,PUESTO=:PUESTO,MISMA=:MISMA,ANTICIPO=:ANTICIPO,ANTICIPO_APLICADO=:ANTICIPO_APLICADO 
 						WHERE CARGO_ID=:CARGO_ID
 					"""
-			,excludeColumns:['PEDIDO_ID']
-			)
-		case "VentaDet":
-			return new EntityModel(name:name,table:"SX_VENTASDET"
-			,columnId:"INVENTARIO_ID"
-			,insertSql:"""
+				,excludeColumns:['PEDIDO_ID']
+				)
+			case "VentaDet":
+				return new EntityModel(name:name,table:"SX_VENTASDET"
+				,columnId:"INVENTARIO_ID"
+				,insertSql:"""
 					
 					"""
-			,updateSql:"""
+				,updateSql:"""
 					UPDATE SX_VENTASDET SET CANTIDAD=:CANTIDAD,CLAVE=:CLAVE,COMENTARIO=:COMENTARIO,COSTO=:COSTO,COSTOP=:COSTOP,COSTOU=:COSTOU
 				,CREADO=:CREADO,DESCRIPCION=:DESCRIPCION,DOCUMENTO=:DOCUMENTO,FACTORU=:FACTORU,FECHA=:FECHA,MODIFICADO=:MODIFICADO
 				,NACIONAL=:NACIONAL,RENGLON=:RENGLON,version=:version,CORTES=:CORTES,DSCTO=:DSCTO,DSCTO_NOTA=:DSCTO_NOTA
@@ -183,55 +93,55 @@ class ReplicaController {
 				,CORTE_LARGO=:CORTE_LARGO,CORTES_INSTRUCCION=:CORTES_INSTRUCCION,ORDENP=:ORDENP,VENTA_ID=:VENTA_ID
 				WHERE INVENTARIO_ID=:INVENTARIO_ID
 					"""
-			)
-		case "PagoConEfectivo":
-			return new EntityModel(name:name,table:"SX_CXC_ABONOS"
-				,columnId:"ABONO_ID"
-				,insertSql:"""
+				)
+			case "PagoConEfectivo":
+				return new EntityModel(name:name,table:"SX_CXC_ABONOS"
+					,columnId:"ABONO_ID"
+					,insertSql:"""
 					"""
-				,updateSql:"""
+					,updateSql:"""
 					UPDATE SX_CXC_ABONOS SET TIPO_ID=:TIPO_ID,CLAVE=:CLAVE,COMENTARIO=:COMENTARIO,FECHA=:FECHA,IMPORTE=:IMPORTE,IMPUESTO=:IMPUESTO,CREADO=:CREADO,CREADO_USERID=:CREADO_USERID,MODIFICADO=:MODIFICADO,MODIFICADO_USERID=:MODIFICADO_USERID,MONEDA=:MONEDA,NOMBRE=:NOMBRE,ORIGEN=:ORIGEN,SIIPAP_ID=:SIIPAP_ID,TC=:TC,TOTAL=:TOTAL,version=:version,APLICABLE=:APLICABLE,COMENTARIO2=:COMENTARIO2,DESCUENTO=:DESCUENTO,FOLIO=:FOLIO,IMPRESO=:IMPRESO,TIPO=:TIPO,CONCEPTO=:CONCEPTO,MODO_CALCULO=:MODO_CALCULO,TIPO_DEV=:TIPO_DEV,ANTICIPO=:ANTICIPO,BANCO=:BANCO,CUENTA_CLIENTE=:CUENTA_CLIENTE,CUENTA_HABIENTE=:CUENTA_HABIENTE,ENVIADO=:ENVIADO,numero=:numero,postFechado=:postFechado,VTO=:VTO,CHEQUE=:CHEQUE,EFECTIVO=:EFECTIVO,REFERENCIA=:REFERENCIA,TRANSFERENCIA=:TRANSFERENCIA,AUTO_TARJETA_BANCO=:AUTO_TARJETA_BANCO,COMISION_TARJETA=:COMISION_TARJETA,DIF_CAMBIARIA=:DIF_CAMBIARIA,CLIENTE_ID=:CLIENTE_ID,COBRADOR_ID=:COBRADOR_ID,ESQUEMA_ID=:ESQUEMA_ID,SUCURSAL_ID=:SUCURSAL_ID,TARJETA_ID=:TARJETA_ID,CUENTA_ID=:CUENTA_ID,DEVOLUCION_ID=:DEVOLUCION_ID,REC_DEVUELTO=:REC_DEVUELTO,AUTORIZACION_ID=:AUTORIZACION_ID,LIBERADO=:LIBERADO,FECHA_DEPOSITO=:FECHA_DEPOSITO,SALVO_COBRO=:SALVO_COBRO,SAF=:SAF,DIFERENCIA=:DIFERENCIA,DIFERENCIA_FECHA=:DIFERENCIA_FECHA,TX_IMPORTADO=:TX_IMPORTADO,TX_REPLICADO=:TX_REPLICADO 
 					WHERE ABONO_ID=:ABONO_ID
 					"""
-				,excludeColumns:['DISPONIBLE']
-			)
-		case "AplicacionDePago":
-			return new EntityModel(name:name,table:"SX_CXC_APLICACIONES"
-				,columnId:"APLICACION_ID"
-				,insertSql:"""
+					,excludeColumns:['DISPONIBLE']
+				)
+			case "AplicacionDePago":
+				return new EntityModel(name:name,table:"SX_CXC_APLICACIONES"
+					,columnId:"APLICACION_ID"
+					,insertSql:"""
 					"""
-				,updateSql:"""
+					,updateSql:"""
 					UPDATE SX_CXC_APLICACIONES SET TIPO=:TIPO,COMENTARIO=:COMENTARIO,DESCUENT_NOTA=:DESCUENT_NOTA,ABN_BANCO=:ABN_BANCO,CLAVE=:CLAVE,CAR_DOCTO=:CAR_DOCTO,ABN_FOLIO=:ABN_FOLIO,ABN_DESCRIPCION=:ABN_DESCRIPCION,NOMBRE=:NOMBRE,CAR_ORIGEN=:CAR_ORIGEN,CAR_POSTF=:CAR_POSTF,CAR_PBRUTO=:CAR_PBRUTO,CAR_SUCURSAL=:CAR_SUCURSAL,fecha=:fecha,IMPORTE=:IMPORTE,CREADO=:CREADO,CREADO_USERID=:CREADO_USERID,MODIFICADO=:MODIFICADO,MODIFICADO_USERID=:MODIFICADO_USERID,SIIPAP_ID=:SIIPAP_ID,ABONO_ID=:ABONO_ID,CARGO_ID=:CARGO_ID,RENGLON=:RENGLON,CAR_JURIDICO=:CAR_JURIDICO,AUTORIZACION_ID=:AUTORIZACION_ID,CE=:CE,CAR_FECHA=:CAR_FECHA,CAR_TOTAL=:CAR_TOTAL,CAR_TIPO=:CAR_TIPO,CAR_ANTICIPO=:CAR_ANTICIPO
 					 WHERE APLICACION_ID=:APLICACION_ID
 					"""
-				
-			)
-		case "ComprobanteFiscal":
-			return new EntityModel(name:name,table:"SX_CFD"
-				,columnId:"CFD_ID"
-				,insertSql:"""
+					
+				)
+			case "ComprobanteFiscal":
+				return new EntityModel(name:name,table:"SX_CFD"
+					,columnId:"CFD_ID"
+					,insertSql:"""
 					"""
-				,updateSql:"""
+					,updateSql:"""
 						UPDATE SX_CFD SET TIPO=:TIPO,SERIE=:SERIE,FOLIO=:FOLIO,ANO_APROBACION=:ANO_APROBACION,XML_PATH=:XML_PATH,XML_SCHEMA_VERSION=:XML_SCHEMA_VERSION,NO_APROBACION=:NO_APROBACION,NO_CERTIFICADO=:NO_CERTIFICADO,ORIGEN_ID=:ORIGEN_ID,RECEPTOR=:RECEPTOR,EMISOR=:EMISOR,CREADO=:CREADO,CREADO_USR=:CREADO_USR,MODIFICADO=:MODIFICADO,MODIFICADO_USR=:MODIFICADO_USR,TX_REPLICADO=:TX_REPLICADO,TX_IMPORTADO=:TX_IMPORTADO,version=:version,TIPO_CFD=:TIPO_CFD,ADUANA=:ADUANA,CUENTA_PREDIAL=:CUENTA_PREDIAL,ESTADO=:ESTADO,IMPUESTO=:IMPUESTO,PEDIMENTO=:PEDIMENTO,PEDIMENTO_FECHA=:PEDIMENTO_FECHA,RFC=:RFC,TOTAL=:TOTAL 
 						WHERE CFD_ID=:CFD_ID
 					"""
-			)
-		case "Compra2":
-			return new EntityModel(name:name,table:"SX_COMPRAS2"
-				,columnId:"COMPRA_ID"
-				,insertSql:"""
+				)
+			case "Compra2":
+				return new EntityModel(name:name,table:"SX_COMPRAS2"
+					,columnId:"COMPRA_ID"
+					,insertSql:"""
 					"""
-				,updateSql:"""
+					,updateSql:"""
 						UPDATE SX_COMPRAS2 SET TIPO=:TIPO,CIERRE=:CIERRE,CLAVE=:CLAVE,COMENTARIO=:COMENTARIO,COMENTARIO_REC=:COMENTARIO_REC,DEPURACION=:DEPURACION,DOCTO=:DOCTO,ENTREGA=:ENTREGA,FECHA=:FECHA,FOLIO=:FOLIO,IMPORTE_BRUTO=:IMPORTE_BRUTO,IMPORTE_DESC=:IMPORTE_DESC,IMPORTE_NETO=:IMPORTE_NETO,IMPUESTOS=:IMPUESTOS,CREADO=:CREADO,CREADO_USR=:CREADO_USR,MODIFICADO=:MODIFICADO,MODIFICADO_USR=:MODIFICADO_USR,MONEDA=:MONEDA,NOMBRE=:NOMBRE,PENDIENTE=:PENDIENTE,SUBTOTAL=:SUBTOTAL,TC=:TC,TOTAL=:TOTAL,version=:version,SUCURSAL_ID=:SUCURSAL_ID,PROVEEDOR_ID=:PROVEEDOR_ID,TX_IMPORTADO=:TX_IMPORTADO,TX_REPLICADO=:TX_REPLICADO,CONSOLIDADA=:CONSOLIDADA,IMPORTACION=:IMPORTACION,ESPECIAL=:ESPECIAL,DSCTO_ESPECIAL=:DSCTO_ESPECIAL
 						WHERE COMPRA_ID=:COMPRA_ID
 					"""
-			)
-		case "CompraUnitaria":
-			return new EntityModel(name:name,table:"SX_COMPRAS2_DET"
-				,columnId:"COMPRADET_ID"
-				,insertSql:"""
+				)
+			case "CompraUnitaria":
+				return new EntityModel(name:name,table:"SX_COMPRAS2_DET"
+					,columnId:"COMPRADET_ID"
+					,insertSql:"""
 					"""
-				,updateSql:"""
+					,updateSql:"""
 						UPDATE SX_COMPRAS2_DET SET CLAVE=:CLAVE,COMENTARIO=:COMENTARIO,COSTO=:COSTO,DEPURACION=:DEPURACION,DEPURADO=:DEPURADO
 					,DESC1=:DESC1,DESC2=:DESC2,DESC3=:DESC3,DESC4=:DESC4,DESC5=:DESC5,DESC6=:DESC6,DESCRIPCION=:DESCRIPCION,DESCF=:DESCF
 					,FACTOR=:FACTOR,IMPORTE_BRUTO=:IMPORTE_BRUTO,IMPORTE_DESC=:IMPORTE_DESC,IMPORTE_NETO=:IMPORTE_NETO
@@ -239,81 +149,107 @@ class ReplicaController {
 					,PRODUCTO_ID=:PRODUCTO_ID,COMPRA_ID=:COMPRA_ID,FOLIO_ORIGEN=:FOLIO_ORIGEN,ADUANA=:ADUANA,REGISTRO_ADUANA=:REGISTRO_ADUANA,RECIBIDO_GLOBAL=:RECIBIDO_GLOBAL
 					 WHERE COMPRADET_ID=:COMPRADET_ID
 					"""
-				
-			)
-		case "RecepcionDeCompra":
-			return new EntityModel(name:name,table:"SX_ENTRADA_COMPRAS"
-				,columnId:"ID"
-				,insertSql:"""
+					
+				)
+			case "RecepcionDeCompra":
+				return new EntityModel(name:name,table:"SX_ENTRADA_COMPRAS"
+					,columnId:"ID"
+					,insertSql:"""
 					"""
-				,updateSql:"""
+					,updateSql:"""
 						UPDATE SX_ENTRADA_COMPRAS SET COMENTARIO=:COMENTARIO,FECHA=:FECHA,CREADO=:CREADO,CREADO_USR=:CREADO_USR
 						,MODIFICADO=:MODIFICADO,MODIFICADO_USR=:MODIFICADO_USR,REMISION=:REMISION,version=:version
 						,COMPRA_ID=:COMPRA_ID,SUCURSAL_ID=:SUCURSAL_ID
 						,DOCUMENTO=:DOCUMENTO,TX_IMPORTADO=:TX_IMPORTADO,TX_REPLICADO=:TX_REPLICADO
 						 WHERE ID=:ID
 					"""
-			)
-		case "EntradaPorCompra":
-			return new EntityModel(name:name,table:"SX_INVENTARIO_COM"
-				,columnId:"INVENTARIO_ID"
-				,insertSql:"""
+				)
+			case "EntradaPorCompra":
+				return new EntityModel(name:name,table:"SX_INVENTARIO_COM"
+					,columnId:"INVENTARIO_ID"
+					,insertSql:"""
 					"""
-				,updateSql:"""
+					,updateSql:"""
 						UPDATE SX_INVENTARIO_COM SET ALMACEN_ID=:ALMACEN_ID,CANTIDAD=:CANTIDAD,CLAVE=:CLAVE,COMENTARIO=:COMENTARIO,COSTO=:COSTO,COSTOP=:COSTOP,COSTOU=:COSTOU,CREADO=:CREADO,CREADO_USERID=:CREADO_USERID,DESCRIPCION=:DESCRIPCION,DOCUMENTO=:DOCUMENTO,FACTORU=:FACTORU,FECHA=:FECHA,MODIFICADO=:MODIFICADO,NACIONAL=:NACIONAL,RENGLON=:RENGLON,MODIFICADO_USERID=:MODIFICADO_USERID,version=:version,UNIDAD_ID=:UNIDAD_ID,SUCURSAL_ID=:SUCURSAL_ID,PRODUCTO_ID=:PRODUCTO_ID,COMPRA=:COMPRA,COMS2_ID=:COMS2_ID,COMPRA_F=:COMPRA_F,REMISION_F=:REMISION_F,REMISION=:REMISION,SUCCOM=:SUCCOM,PROVEEDOR_ID=:PROVEEDOR_ID,COMPRA_ID=:COMPRA_ID,KILOS=:KILOS,EXISTENCIA=:EXISTENCIA,RECEPCION_ID=:RECEPCION_ID,COMPRADET_ID=:COMPRADET_ID,COSTO_FLETE=:COSTO_FLETE,ANALISIS_FLETE_ID=:ANALISIS_FLETE_ID,COSTO_MP=:COSTO_MP,COSTO_GASTO=:COSTO_GASTO,ANALISIS_GASTO_ID=:ANALISIS_GASTO_ID
 					 	WHERE INVENTARIO_ID=:INVENTARIO_ID
 					"""
-			)
-		case "DevolucionDeCompra":
-			return new EntityModel(name:name,table:"SX_DEVOLUCION_COMPRAS"
-				,columnId:"DEVOLUCION_ID"
-				,insertSql:"""
+				)
+			case "DevolucionDeCompra":
+				return new EntityModel(name:name,table:"SX_DEVOLUCION_COMPRAS"
+					,columnId:"DEVOLUCION_ID"
+					,insertSql:"""
 					"""
-				,updateSql:"""
+					,updateSql:"""
 						UPDATE SX_DEVOLUCION_COMPRAS SET PROVEEDOR_ID=:PROVEEDOR_ID,SUCURSAL_ID=:SUCURSAL_ID,REFERENCIA=:REFERENCIA,DOCUMENTO=:DOCUMENTO,FECHA=:FECHA,CLAVE=:CLAVE,NOMBRE=:NOMBRE,COMENTARIO=:COMENTARIO,TX_IMPORTADO=:TX_IMPORTADO,TX_REPLICADO=:TX_REPLICADO,CREADO=:CREADO,CREADO_USR=:CREADO_USR,MODIFICADO=:MODIFICADO,MODIFICADO_USR=:MODIFICADO_USR,CREATED_IP=:CREATED_IP,CREATED_MAC=:CREATED_MAC,UPDATED_IP=:UPDATED_IP,UPDATED_MAC=:UPDATED_MAC,version=:version
 					 WHERE DEVOLUCION_ID=:DEVOLUCION_ID
 					"""
-			)
-		case "DevolucionDeCompraDet":
-			return new EntityModel(name:name,table:"SX_INVENTARIO_DEC"
-				,columnId:"INVENTARIO_ID"
-				,insertSql:"""
+				)
+			case "DevolucionDeCompraDet":
+				return new EntityModel(name:name,table:"SX_INVENTARIO_DEC"
+					,columnId:"INVENTARIO_ID"
+					,insertSql:"""
 					"""
-				,updateSql:"""
+					,updateSql:"""
 					UPDATE SX_INVENTARIO_DEC SET ALMACEN_ID=:ALMACEN_ID,CANTIDAD=:CANTIDAD,CLAVE=:CLAVE,COMENTARIO=:COMENTARIO,COSTO=:COSTO,COSTOP=:COSTOP,COSTOU=:COSTOU,CREADO=:CREADO,CREADO_USERID=:CREADO_USERID,DESCRIPCION=:DESCRIPCION,DOCUMENTO=:DOCUMENTO,EXISTENCIA=:EXISTENCIA,FACTORU=:FACTORU,FECHA=:FECHA,KILOS=:KILOS,MODIFICADO=:MODIFICADO,NACIONAL=:NACIONAL,RENGLON=:RENGLON,MODIFICADO_USERID=:MODIFICADO_USERID,version=:version,SUCURSAL_ID=:SUCURSAL_ID,PRODUCTO_ID=:PRODUCTO_ID,UNIDAD_ID=:UNIDAD_ID,DEVOLUCION_ID=:DEVOLUCION_ID
 					 WHERE INVENTARIO_ID=:INVENTARIO_ID
 					"""
-			)
-		case "RecepcionDeMaquila":
-			return new EntityModel(name:name,table:"SX_RECEPCION_MAQUILA"
-				,columnId:"ID"
-				,insertSql:"""
+				)
+			case "RecepcionDeMaquila":
+				return new EntityModel(name:name,table:"SX_RECEPCION_MAQUILA"
+					,columnId:"ID"
+					,insertSql:"""
 					"""
-				,updateSql:"""
+					,updateSql:"""
 						UPDATE SX_RECEPCION_MAQUILA SET comentario=:comentario,DOCUMENTO=:DOCUMENTO,FECHA=:FECHA,CREADO=:CREADO,CREADO_USR=:CREADO_USR,MODIFICADO=:MODIFICADO,MODIFICADO_USR=:MODIFICADO_USR,REMISION=:REMISION,version=:version,SUCURSAL_ID=:SUCURSAL_ID,PROVEEDOR_ID=:PROVEEDOR_ID,createdIp=:createdIp,createdMac=:createdMac,updatedIp=:updatedIp,updatedMac=:updatedMac,TX_IMPORTADO=:TX_IMPORTADO,TX_REPLICADO=:TX_REPLICADO
 					 WHERE ID=:ID
 					"""
-			)
-		case "EntradaDeMaquila":
-			return new EntityModel(name:name,table:"SX_INVENTARIO_MAQ"
-				,columnId:"INVENTARIO_ID"
-				,insertSql:"""
+				)
+			case "EntradaDeMaquila":
+				return new EntityModel(name:name,table:"SX_INVENTARIO_MAQ"
+					,columnId:"INVENTARIO_ID"
+					,insertSql:"""
 					"""
-				,updateSql:"""
+					,updateSql:"""
 						UPDATE SX_INVENTARIO_MAQ SET ALMACEN_ID=:ALMACEN_ID,CANTIDAD=:CANTIDAD,CLAVE=:CLAVE,COMENTARIO=:COMENTARIO,COSTO=:COSTO,COSTOP=:COSTOP,COSTOU=:COSTOU,CREADO=:CREADO,CREADO_USERID=:CREADO_USERID,DESCRIPCION=:DESCRIPCION,DOCUMENTO=:DOCUMENTO,FACTORU=:FACTORU,FECHA=:FECHA,MODIFICADO=:MODIFICADO,NACIONAL=:NACIONAL,RENGLON=:RENGLON,MODIFICADO_USERID=:MODIFICADO_USERID,version=:version,UNIDAD_ID=:UNIDAD_ID,SUCURSAL_ID=:SUCURSAL_ID,PRODUCTO_ID=:PRODUCTO_ID,REMISION_F=:REMISION_F,MAQUILA_ID=:MAQUILA_ID,MAQUILADOR=:MAQUILADOR,REMISION=:REMISION,MAQUILA_TIPO=:MAQUILA_TIPO,KILOS=:KILOS,EXISTENCIA=:EXISTENCIA,COSTO_CORTE=:COSTO_CORTE,COSTO_FLETE=:COSTO_FLETE,COSTO_MP=:COSTO_MP,RECEPCION_ID=:RECEPCION_ID,ANALISIS_ID=:ANALISIS_ID,ANALISIS_FLETE_ID=:ANALISIS_FLETE_ID,ANALISIS_HOJEO_ID=:ANALISIS_HOJEO_ID
 					 WHERE INVENTARIO_ID=:INVENTARIO_ID,
 					"""
-			)
-		default:
-			return null;
-			
-		}
-		
-	}*/
+				)
+			case "Transformacion":
+				return new EntityModel(name:name,table:"SX_TRANSFORMACIONES"
+					,columnId:"TRANSFORMACION_ID"
+					,insertSql:"""
+					"""
+					,updateSql:"""
+						UPDATE SX_TRANSFORMACIONES SET CLASE=:CLASE,COMENTARIO=:COMENTARIO,DOCUMENTO=:DOCUMENTO,FECHA=:FECHA,GASTO=:GASTO
+						,PORINVENTARIO=:PORINVENTARIO,CREADO=:CREADO,CREADO_USERID=:CREADO_USERID,MODIFICADO=:MODIFICADO
+						,MODIFICADO_USERID=:MODIFICADO_USERID,version=:version,SUCURSAL_ID=:SUCURSAL_ID
+						WHERE TRANSFORMACION_ID=:TRANSFORMACION_ID
+					"""
+				)
+			case "TransformacionDet":
+				return new EntityModel(name:name,table:"SX_INVENTARIO_TRS"
+					,columnId:"INVENTARIO_ID"
+					,insertSql:"""
+					"""
+					,updateSql:"""
+						UPDATE SX_INVENTARIO_TRS SET ALMACEN_ID=:ALMACEN_ID,CANTIDAD=:CANTIDAD,CLAVE=:CLAVE
+						,COMENTARIO=:COMENTARIO,COSTO=:COSTO,COSTOP=:COSTOP,COSTOU=:COSTOU,CREADO=:CREADO,CREADO_USERID=:CREADO_USERID
+						,DESCRIPCION=:DESCRIPCION,DOCUMENTO=:DOCUMENTO,FACTORU=:FACTORU,FECHA=:FECHA,MODIFICADO=:MODIFICADO,NACIONAL=:NACIONAL,RENGLON=:RENGLON,MODIFICADO_USERID=:MODIFICADO_USERID,version=:version
+						,PRODUCTO_ID=:PRODUCTO_ID,SUCURSAL_ID=:SUCURSAL_ID,UNIDAD_ID=:UNIDAD_ID,GASTO_COMENTARIO=:GASTO_COMENTARIO,TRTIP=:TRTIP,costoOrigen=:costoOrigen
+						,GASTO_DOCTO=:GASTO_DOCTO,gastos=:gastos,DESTINO_ID=:DESTINO_ID,KILOS=:KILOS,EXISTENCIA=:EXISTENCIA,TRANSFORMACION_ID=:TRANSFORMACION_ID
+						,ANALISIS_ID=:ANALISIS_ID,COSTO_FLETE=:COSTO_FLETE,COSTO_CORTE=:COSTO_CORTE,ANALISIS_FLETE_ID=:ANALISIS_FLETE_ID,ANALISIS_HOJEO_ID=:ANALISIS_HOJEO_ID
+						,REMISION=:REMISION 
+						WHERE INVENTARIO_ID=:INVENTARIO_ID
+					"""
+				)
+			default:
+				return null;
+				
+			}
+	}
 
 }
 
-/*
 class EntityModel{
 	String name
 	String table
@@ -321,4 +257,4 @@ class EntityModel{
 	String insertSql
 	String updateSql
 	List excludeColumns
-}*/
+}
