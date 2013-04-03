@@ -9,6 +9,21 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 // Place your Spring DSL code here
 beans = {
 	customPropertyEditorRegistrar(CustomDateEditorRegistrar)
+	
+	
+	tacubaDataSource(BasicDataSource){
+		driverClassName = 'com.mysql.jdbc.Driver'
+		username = 'root'
+		password = 'sys'
+		url = 'jdbc:mysql://10.10.1.228/tacuba?autoReconnect=true'
+	}
+	
+	oficinasDataSource(BasicDataSource){
+		driverClassName = 'com.mysql.jdbc.Driver'
+		username = 'root'
+		password = 'sys'
+		url = 'jdbc:mysql://10.10.1.221/certificacion?autoReconnect=true'
+	}
 
 	switch(Environment.current) {
 		case Environment.TEST:

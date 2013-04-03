@@ -24,7 +24,7 @@ environments {
             //url = "jdbc:h2:mem:testDb;MVCC=TRUE;LOCK_TIMEOUT=10000"
 			//url = "jdbc:h2:prodDb;MVCC=TRUE;LOCK_TIMEOUT=10000"
 			dbCreate = "update"
-			url = "jdbc:mysql://localhost/produccion"
+			url = "jdbc:mysql://10.10.1.221/certificacion"
 			driverClassName = "com.mysql.jdbc.Driver"
 			dialect = org.hibernate.dialect.MySQL5InnoDBDialect
 			username = "root"
