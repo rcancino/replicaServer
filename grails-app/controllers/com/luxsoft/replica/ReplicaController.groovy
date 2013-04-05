@@ -10,12 +10,20 @@ import groovy.sql.Sql
  * A controller class handles incoming web requests and performs actions such as redirects, rendering views and so on.
  */
 class ReplicaController {
-	 
+	
+	def replicaService 
+	
 	def tacubaDataSource
 	def oficinasDataSource
+	
+	
 
 	def index(){
 		redirect action:"importarAuditLog"
+	}
+	def test2(){
+		
+		render replicaService.resolverUdateQuery('tacubaDataSource','SX_FICHAS')
 	}
 	
 	def test(){
@@ -44,13 +52,14 @@ class ReplicaController {
 	}
 	
 	def importarAuditLog(){
-		
+		replicaService.importarAuditLog('tacubaDataSource', 'oficinasDataSource')
+		/*
 		Sql sql=new Sql(tacubaDataSource)
 		Sql target=new Sql(oficinasDataSource)
 		
-		//def rows=sql.rows("select * from audit_log where replicado is null order by id")
+		
 		sql.eachRow("select * from audit_log where replicado is null order by id") {
-		//rows.each {
+		
 			def model=EntityModelFactory.getModel(it.entityName)
 			if(model){
 				
@@ -88,12 +97,13 @@ class ReplicaController {
 				}else if(it.action=='DELETE'){
 					target.execute("DELETE FROM $model.table WHERE $model.columnId=?", [it.id])
 				}
-				//println "Importando" +origenSql
+				
 			}else{
 				sql.execute("UPDATE AUDIT_LOG SET MESSAGE=? WHERE ID=? ", ['NO REPLICABLE POR FALTA DE CONFIGURACION',it.id])
 			}
 			
 		}
+		*/
 		render 'Audit Log importados: '
 	}
 	/*
