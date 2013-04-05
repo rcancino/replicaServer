@@ -34,7 +34,21 @@ beans = {
 				password="sys"
 				suppressClose="false"
 			}
-			
+		break
+		case Environment.DEVELOPMENT:
+			tacubaDataSource(BasicDataSource){
+				driverClassName = 'com.mysql.jdbc.Driver'
+				username = 'root'
+				password = 'sys'
+				url = 'jdbc:mysql://localhost/tacuba?autoReconnect=true'
+			}
+		
+			oficinasDataSource(BasicDataSource){
+				driverClassName = 'com.mysql.jdbc.Driver'
+				username = 'root'
+				password = 'sys'
+				url = 'jdbc:mysql://localhost/produccion?autoReconnect=true'
+			}
 		break
 	}
 
