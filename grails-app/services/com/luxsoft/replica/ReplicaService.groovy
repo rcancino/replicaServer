@@ -100,41 +100,6 @@ class ReplicaService {
 					sourceSql.execute("UPDATE AUDIT_LOG SET MESSAGE=? WHERE ID=? ", [err,it.id])
 				}
 				
-				/*
-				
-				if(it.action=='INSERT'){
-					println 'Insertando registro: '+row
-					try{
-						SimpleJdbcInsert insert=new SimpleJdbcInsert(targetDataSource).withTableName(config.table)
-						config.excludeInsertColumns.each{
-							row.put(it,null)
-						}
-						insert.execute(row)
-						sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["",it.id])
-					}catch(Exception e){
-						String err=ExceptionUtils.getRootCauseMessage(e)+ " Tipo: "+ExceptionUtils.getRootCause(e).getClass().getName()
-						sourceSql.execute("UPDATE AUDIT_LOG SET MESSAGE=? WHERE ID=? ", [err,it.id])
-						
-					}
-					
-				}else if(it.action=='UPDATE'){
-					println 'Update: '+row
-					try{
-						int updated=targetSql.executeUpdate(row, config.updateSql)
-						if(updated)
-							sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["",it.id])
-					}catch(Exception e){
-						String err=ExceptionUtils.getRootCauseMessage(e)+ " Tipo: "+ExceptionUtils.getRootCause(e).getClass().getName()
-						
-						sourceSql.execute("UPDATE AUDIT_LOG SET MESSAGE=? WHERE ID=? ", [err,it.id])
-					}
-					
-				}else if(it.action=='DELETE'){
-					int eliminados=targetSql.execute("DELETE FROM $config.table WHERE $config.columnId=?", [it.id])
-					if(eliminados)
-						sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["NO SE PUDO ELIMIAR",it.id])
-				}		
-				*/
 			}else
 				sourceSql.execute("UPDATE AUDIT_LOG SET MESSAGE=? WHERE ID=? ", ['NO REPLICABLE POR FALTA DE CONFIGURACION',it.id])
 			
