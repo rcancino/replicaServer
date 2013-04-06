@@ -80,7 +80,8 @@ grails.project.dependency.resolution = {
         compile ":quartz:1.0-RC5"
         compile ":spring-batch:1.0.RC2"
         compile ":fields:1.3"
-		
+		compile ":quartz-monitor:0.3-RC1"
+        //compile ":console:1.2"
 		
 
         
