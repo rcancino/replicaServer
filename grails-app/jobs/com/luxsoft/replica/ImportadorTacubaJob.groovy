@@ -16,7 +16,7 @@ class ImportadorTacubaJob {
     }
 
     def execute() {
-		println 'Utilizando: Job: '+getProperties()
+		//println 'Utilizando: Job: '+getProperties()
 		def oficinas=Sucursal.findByNombre('oficinas')
 		def sucursal=Sucursal.findByNombre('tacuba')
 		println "Importando registros de ${sucursal.dataSourceName} a ${oficinas.dataSourceName}"

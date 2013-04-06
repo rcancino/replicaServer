@@ -2,7 +2,7 @@ package com.luxsoft.replica
 
 
 
-class ExportadorJob {
+class ExportadorTacubaJob {
 	
 	def concurrent = false
 	def dataSourceLookup
