@@ -318,7 +318,6 @@ class EntityModelFactory {
 		'NotaDeCreditoBonificacion':'SX_CXC_ABONOS',
 		'AnalisisDeTransformacion':'SX_ANALISIS_TRS',
 		'TrasladoDet':'SX_INVENTARIO_TRD',
-		'Folio':'SX_FOLIOS',
 		'Traslado':'SX_TRASLADOS',
 		'CargoPorDiferencia':'SX_VENTAS',
 		'Existencia':'SX_EXISTENCIAS',

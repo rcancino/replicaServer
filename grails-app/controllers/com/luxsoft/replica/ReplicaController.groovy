@@ -21,9 +21,10 @@ class ReplicaController {
 	def index(){
 		redirect action:"importarAuditLog"
 	}
+	/*
 	def test2(){
 		render replicaService.findUpdateQuery('tacubaDataSource','SX_FICHAS')
-	}
+	}*/
 	
 	def instalarConfiguraciones(){
 		replicaService.instalarConfiguraciones()
