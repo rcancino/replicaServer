@@ -88,6 +88,8 @@ log4j = {
            'org.springframework',
            'org.hibernate',
            'net.sf.ehcache.hibernate'
+
+    info   'grails.app.jobs'
 }
 
 // Added by the JQuery Validation UI plugin:
@@ -176,3 +178,7 @@ grails.plugins.springsecurity.authority.className = 'com.luxor.security.Role'
 
 grails.plugins.springBatch.loadTables=true
 grails.plugins.springBatch.database='h22'
+
+grails.plugins.quartz.monitor.layout='kickstart'
+grails.plugins.quartz.monitor.showTriggerNames=true
+grails.plugins.quartz.monitor.showTickingClock=true
