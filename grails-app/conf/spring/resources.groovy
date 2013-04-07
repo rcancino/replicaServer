@@ -29,7 +29,7 @@ beans = {
 		case Environment.TEST:
 			tacubaDataSource(SingleConnectionDataSource){
 				driverClassName="com.mysql.jdbc.Driver"
-				url="jdbc:mysql://localhost:3306/tacuba"
+				url="jdbc:mysql://10.10.1.228/tacuba?autoReconnect=true"
 				username="root"
 				password="sys"
 				suppressClose="false"
@@ -40,14 +40,14 @@ beans = {
 				driverClassName = 'com.mysql.jdbc.Driver'
 				username = 'root'
 				password = 'sys'
-				url = 'jdbc:mysql://localhost/tacuba?autoReconnect=true'
+				url = 'jdbc:mysql://10.10.1.228/tacuba?autoReconnect=true'
 			}
 		
 			oficinasDataSource(BasicDataSource){
 				driverClassName = 'com.mysql.jdbc.Driver'
 				username = 'root'
 				password = 'sys'
-				url = 'jdbc:mysql://localhost/produccion?autoReconnect=true'
+				url = 'jdbc:mysql://10.10.1.221/certificacion?autoReconnect=true'
 			}
 		break
 	}

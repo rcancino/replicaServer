@@ -66,7 +66,7 @@ class ReplicaService {
 			
 			def config=EntityConfiguration.findByName(it.entityName)
 			if(config){
-				println 'Usando Config: '+config
+				//println 'Usando Config: '+config
 				def origenSql="select * from $config.table where $config.pk=?"
 				def row=sourceSql.firstRow(origenSql, [it.entityId])
 				
@@ -74,16 +74,28 @@ class ReplicaService {
 					println 'Importacion de registro tipo: '+it.action+ 'Row: '+row
 					switch (it.action) {
 						case 'INSERT':
+						println 'Insertando '+config.table
 							SimpleJdbcInsert insert=new SimpleJdbcInsert(targetDataSource).withTableName(config.table)
-							config.excludeInsertColumns.each{
-								row.put(it,null)
+							if(config.excludeInsertColumns){
+								println 'Exlude: '+config.excludeInsertColumns
+								def cols=config.excludeInsertColumns.split(',')
+								cols.each{
+									row.put(it,null)
+								}
+								
 							}
+							
 							insert.execute(row)
 							sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["",it.id])
 							break
 						case 'UPDATE':
-							config.excludeUpdateColumns.each{
-								row.put(it,null)
+							if(config.excludeUpdateColumns){
+								println 'Exlude: '+config.excludeInsertColumns
+								def cols=config.excludeUpdateColumns.split(',')
+								cols.each{
+									row.put(it,null)
+								}
+								
 							}
 							int updated=targetSql.executeUpdate(row, config.updateSql)
 							if(updated)

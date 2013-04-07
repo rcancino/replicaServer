@@ -19,7 +19,6 @@ class EntityConfiguration {
 	Date	dateCreated
 	Date	lastUpdated
 	
-	static hasMany = [excludeInsertColumns:String,excludeUpdateColumns:String]
 	
     static mapping = {
 		sort "name"

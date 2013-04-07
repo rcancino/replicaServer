@@ -37,7 +37,7 @@ class ReplicaController {
 		//insert.compile();
 		//render insert.getInsertString() 
 		
-		Sql target=new Sql(oficinasDataSource)
+		Sql target=new Sql(tacubaDataSource)
 		def res="UPDATE SX_INVENTARIO_TRS SET "
 		target.eachRow("select * from SX_INVENTARIO_TRS where 1=2 ", {meta->
 			//res+=meta
