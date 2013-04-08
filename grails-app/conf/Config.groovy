@@ -88,8 +88,18 @@ log4j = {
            'org.springframework',
            'org.hibernate',
            'net.sf.ehcache.hibernate'
+		   'grails.application.service.'
 
-    info   'grails.app.jobs'
+    info    'grails.app','grails.app.jobs'
+	//debug   'grails.app.jobs'
+			//,'grails.app.jobs'
+	
+	environments {
+		development {
+			debug 'grails.app.controllers','grails.app.services','grails.app.jobs'
+		}
+	}
+			
 }
 
 // Added by the JQuery Validation UI plugin:

@@ -22,8 +22,8 @@ class BootStrap {
 				,enabled:true).save(flush:true);
 			}
     	}
-		def tacuba=Sucursal.findOrSaveWhere(nombre:"tacuba",dataSourceName:'tacubaDataSource')
-		def oficinas=Sucursal.findOrSaveWhere(nombre:'oficinas',dataSourceName:'oficinasDataSource')
+		def tacuba=Sucursal.findOrSaveWhere(nombre:"TACUBA",dataSourceName:'tacubaDataSource')
+		def oficinas=Sucursal.findOrSaveWhere(nombre:'OFICINAS',dataSourceName:'oficinasDataSource')
 		
 		
     }

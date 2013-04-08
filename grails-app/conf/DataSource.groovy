@@ -12,56 +12,41 @@ hibernate {
 // environment specific settings
 environments {
     development {
-		/*
-        dataSource {
-            dbCreate = "update" // one of 'create', 'create-drop', 'update', 'validate', ''
-            url = "jdbc:h2:mem:devDb;MVCC=TRUE;LOCK_TIMEOUT=10000"
-			
-        }*/
+		
 		dataSource {
 			dbCreate = "update"
-			url = "jdbc:h2:prodDb;MVCC=TRUE;LOCK_TIMEOUT=10000"
-			pooled = true
-			properties {
-			   maxActive = -1
-			   minEvictableIdleTimeMillis=1800000
-			   timeBetweenEvictionRunsMillis=1800000
-			   numTestsPerEvictionRun=3
-			   testOnBorrow=true
-			   testWhileIdle=true
-			   testOnReturn=true
-			   validationQuery="SELECT 1"
-			}
-		}
-    }
-    test {
-        dataSource {
-            //dbCreate = "update"
-            //url = "jdbc:h2:mem:testDb;MVCC=TRUE;LOCK_TIMEOUT=10000"
-			//url = "jdbc:h2:prodDb;MVCC=TRUE;LOCK_TIMEOUT=10000"
-			dbCreate = "update"
-			url = "jdbc:mysql://10.10.1.221/certificacion"
+			url = "jdbc:mysql://localhost/produccion"
 			driverClassName = "com.mysql.jdbc.Driver"
 			dialect = org.hibernate.dialect.MySQL5InnoDBDialect
 			username = "root"
 			password = "sys"
         }
     }
+    test {
+        dataSource {
+            dbCreate = "create-drop" 
+            url = "jdbc:h2:mem:devDb;MVCC=TRUE;LOCK_TIMEOUT=10000"
+        }
+    }
     production {
         dataSource {
-            dbCreate = "update"
-            url = "jdbc:h2:prodDb;MVCC=TRUE;LOCK_TIMEOUT=10000"
-            pooled = true
-            properties {
-               maxActive = -1
-               minEvictableIdleTimeMillis=1800000
-               timeBetweenEvictionRunsMillis=1800000
-               numTestsPerEvictionRun=3
-               testOnBorrow=true
-               testWhileIdle=true
-               testOnReturn=true
-               validationQuery="SELECT 1"
-            }
-        }
+			pooled = true
+			dbCreate = "update"
+			url = "jdbc:mysql://10.10.1.221/produccion"
+			driverClassName = "com.mysql.jdbc.Driver"
+			dialect = org.hibernate.dialect.MySQL5InnoDBDialect
+			username = "root"
+			password = "sys"
+			properties {
+				maxActive = 10
+				maxIdle = 5
+				minIdle = 2
+				initialSize = 2
+				minEvictableIdleTimeMillis = 60000
+				timeBetweenEvictionRunsMillis = 60000
+				maxWait = 10000
+				validationQuery = "/* ping */"
+			}
+}
     }
 }

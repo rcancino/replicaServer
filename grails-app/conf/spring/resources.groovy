@@ -40,14 +40,14 @@ beans = {
 				driverClassName = 'com.mysql.jdbc.Driver'
 				username = 'root'
 				password = 'sys'
-				url = 'jdbc:mysql://10.10.1.228/tacuba?autoReconnect=true'
+				url = 'jdbc:mysql://localhost/tacuba?autoReconnect=true'
 			}
 		
 			oficinasDataSource(BasicDataSource){
 				driverClassName = 'com.mysql.jdbc.Driver'
 				username = 'root'
 				password = 'sys'
-				url = 'jdbc:mysql://10.10.1.221/certificacion?autoReconnect=true'
+				url = 'jdbc:mysql://localhost/produccion?autoReconnect=true'
 			}
 		break
 	}
