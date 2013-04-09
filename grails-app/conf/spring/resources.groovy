@@ -42,6 +42,12 @@ beans = {
 				password = 'sys'
 				url = 'jdbc:mysql://localhost/tacuba?autoReconnect=true'
 			}
+			andradeDataSource(BasicDataSource){
+				driverClassName = 'com.mysql.jdbc.Driver'
+				username = 'root'
+				password = 'sys'
+				url = 'jdbc:mysql://localhost/andrade?autoReconnect=true'
+			}
 		
 			oficinasDataSource(BasicDataSource){
 				driverClassName = 'com.mysql.jdbc.Driver'

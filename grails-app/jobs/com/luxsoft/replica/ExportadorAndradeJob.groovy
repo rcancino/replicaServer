@@ -4,22 +4,21 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 
 
 
-class ExportadorTacubaJob {
+class ExportadorAndradeJob {
 	
 	def concurrent = false
 	def replicaService
 	
+	
 	def group = "Replica-Exportadores"
 	
     static triggers = {
-		simple name:'Exportacion_Tacuba',repeatInterval: 5000l // execute job once in 5 seconds
-      
+		simple name:'Exportacion_Andrade',repeatInterval: 5000l // execute job once in 5 seconds
     }
 
     def execute() {
-		/*
-		def oficinas=Sucursal.findByNombre('oficinas')
-		def sucursal=Sucursal.findByNombre('tacuba')
+		def oficinas=Sucursal.findByNombre('OFICINAS')
+		def sucursal=Sucursal.findOrSaveWhere(nombre:"ANDRADE",dataSourceName:'andradeDataSource')
 		log.debug("Exportacion de ${oficinas.dataSourceName} a ${sucursal.dataSourceName} "+new Date())
 		
 		try{
@@ -29,6 +28,6 @@ class ExportadorTacubaJob {
 			log.info(msg)
 			log.error(msg,ExceptionUtils.getRootCause(th))
 		}
-		*/
+		
     }
 }

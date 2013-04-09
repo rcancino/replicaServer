@@ -58,7 +58,7 @@ class ReplicaService {
 	}
 	
     def importarAuditLog(String origen,String destino){
-		println "Importando logs De $origen a $destino"
+		//println "Importando logs De $origen a $destino"
 		def sourceDataSource=dataSourceLookup.getDataSource(origen)
 		def targetDataSource=dataSourceLookup.getDataSource(destino)
 		Sql sourceSql=new Sql(sourceDataSource)
@@ -73,11 +73,9 @@ class ReplicaService {
 			if(config){
 				//println 'Usando Config: '+config
 				def origenSql="select * from $config.tableName where $config.pk=?"
-				println 'SQL: '+origenSql
 				def row=sourceSql.firstRow(origenSql, [it.entityId])
 				
 				try {
-					println 'Importacion de registro tipo: '+it.action+ ' Row: '+row
 					switch (it.action) {
 						case 'INSERT':
 						//println 'Insertando '+config.tableName
@@ -115,7 +113,8 @@ class ReplicaService {
 						default:
 							break;
 					}
-					afterImport(config,it)
+					trasladarCollecciones(config, row, it, sourceSql, targetSql)
+					afterImport(config,row,it,sourceSql)
 				} catch (DuplicateKeyException dk) {
 					sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["",it.id])
 				
@@ -124,58 +123,90 @@ class ReplicaService {
 					String err=ExceptionUtils.getRootCauseMessage(e)
 					println err
 					sourceSql.execute("UPDATE AUDIT_LOG SET MESSAGE=?,REPLICADO=null WHERE ID=? ", [err,it.id])
-					
 				}
 				
 			}else
 				sourceSql.execute("UPDATE AUDIT_LOG SET MESSAGE=? WHERE ID=? ", ['NO REPLICABLE POR FALTA DE CONFIGURACION',it.id])
-			
 		}
 	}
 	
 	
+	private trasladarCollecciones(def config,def dataRow,def auditRow,Sql sourceSql,Sql targetSql){
+		if(config.name=='SolicitudDeTraslado'){
+			//Se eliminan los registros originales por tratarse de una relacion de composicion
+			log.debug 'Importando partidas de SOL: '+auditRow.entityId
+			targetSql.execute("DELETE FROM sx_solicitud_trasladosdet where SOL_ID=?",[auditRow.entityId])
+			if(auditRow.action!='DELETE'){
+				def partidas=sourceSql.rows("SELECT * FROM sx_solicitud_trasladosdet WHERE SOL_ID=?",[auditRow.entityId])
+				log.debug "Importando  $partidas.size partidas para SOL: "+auditRow.entityId
+				SimpleJdbcInsert insert=new SimpleJdbcInsert(targetSql.dataSource).withTableName("sx_solicitud_trasladosdet")
+				partidas.each{
+					insert.execute(it);
+				}
+			}
+		}
+	}
 	
 	/**
 	 * 
 	 * @param config
 	 * @return
 	 */
-	private afterImport(def config,def row){
+	private afterImport(def config,def dataRow,def auditRow,def sourceSql){
 		
+		/*
 		if(config.afterImport){
 			Binding binding=new Binding(['config':config,'row':row])
 			def shell=new GroovyShell(binding);
 			shell.evaluate(config.postImportScrpit)
 			shell=null
+		}*/
+		
+		if(auditRow.sucursal_destino!='OFICINAS'){
+			log.debug 'Dispersando a :'+auditRow.sucursal_destino
+			def auditLog=new AuditLog(
+				action: auditRow.action
+				,entityId: auditRow.entityId
+				,entityName: auditRow.entityName
+				,tableName: auditRow.tableName
+				,sucursalOrigen: auditRow.sucursal_origen
+				,sucursalDestino: auditRow.sucursal_destino
+				,replicado:null
+				,ip: auditRow.ip,)
+				.save(failOnError:true)
 		}
 		
 		switch (config.name) {
 		case 'Existencia':
-			log.debug 'AfterImport para logs de existencia'+row
-			['TACUBA','ANDRADE'].each{
-				println 'Insertando logs de broadcast...'
-				
-				def auditLog=new AuditLog(
-					 action: row.action
-					,entityId: row.entityId
-					,entityName: row.entityName
-					,tableName: row.tableName
-					,sucursalOrigen: 'TACUBA'
-					,sucursalDestino: it
-					,ip: row.ip,)
-				.save(failOnError:true)
-				
-			}
-			break;
-
+			dispersar(config, dataRow,auditRow)
+			break;		
 		default:
 			break;
 		}
-		/*
-		if(config.name=='Existencia'){
-			log.debug 'AfterImport para logs de existencia'+row
+		
+	}
+	
+	def dispersar(def config,def dataRow,def auditRow){
+		def destinos=getDestinos();
+		log.debug 'Dispersando movimiento a las sucursales..'+destinos
+		
+		destinos.each{destino->
+			if(destino!=auditRow.sucursal_origen){
+				log.debug 'Dispersando a :'+destino
+				def auditLog=new AuditLog(
+					action: auditRow.action
+					,entityId: auditRow.entityId
+					,entityName: auditRow.entityName
+					,tableName: auditRow.tableName
+					,sucursalOrigen: auditRow.sucursal_origen
+					,sucursalDestino: destino
+					,ip: auditRow.ip,)
+					.save(failOnError:true)
+			}else{
+				log.debug 'Ignorando dispersion a :'+destino
+			}
 		}
-		*/
+			
 	}
 	
 	def exportarAuditLog(Sucursal sucOrigen,Sucursal sucDestino){
@@ -231,6 +262,7 @@ class ReplicaService {
 						break;
 				}
 				afterExport(config,it)
+				trasladarCollecciones(config, row, it, sourceSql, targetSql)
 			} catch (Exception e) {
 				e.printStackTrace()
 				String err=ExceptionUtils.getRootCauseMessage(e)
@@ -308,12 +340,13 @@ class ReplicaService {
 		config.save(failOnError:true)
 	}
 	
-	def sucursales
+	def destinos
 	
-	def getSursales(){
-		if(!sucursales){
-			sucursales=Sucursal.findAllByActivo('true')
+	def getDestinos(){
+		if(!destinos){
+			log.debug 'Cargando destinos'
+			destinos=Sucursal.findAllByActivaAndNombreNotEqual('true','OFICINAS').collect({it.nombre})
 		}
-		return sucursales
+		return destinos
 	}
 }
