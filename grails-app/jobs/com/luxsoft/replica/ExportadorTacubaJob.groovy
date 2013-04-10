@@ -17,7 +17,7 @@ class ExportadorTacubaJob {
     }
 
     def execute() {
-		/*
+		
 		def oficinas=Sucursal.findByNombre('oficinas')
 		def sucursal=Sucursal.findByNombre('tacuba')
 		log.debug("Exportacion de ${oficinas.dataSourceName} a ${sucursal.dataSourceName} "+new Date())
@@ -29,6 +29,6 @@ class ExportadorTacubaJob {
 			log.info(msg)
 			log.error(msg,ExceptionUtils.getRootCause(th))
 		}
-		*/
+		
     }
 }

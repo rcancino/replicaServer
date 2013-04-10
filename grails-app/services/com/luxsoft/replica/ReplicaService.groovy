@@ -58,27 +58,28 @@ class ReplicaService {
 	}
 	
     def importarAuditLog(String origen,String destino){
-		//println "Importando logs De $origen a $destino"
+		
 		def sourceDataSource=dataSourceLookup.getDataSource(origen)
 		def targetDataSource=dataSourceLookup.getDataSource(destino)
 		Sql sourceSql=new Sql(sourceDataSource)
 		Sql targetSql=new Sql(targetDataSource)
-		
+		//println "Importando logs De $origen a $destino"
 		sourceSql.eachRow("select * from audit_log where replicado is null order by id") {
-			def model=EntityModelFactory.getModel(it.entityName)
-			
+			//def model=EntityModelFactory.getModel(it.entityName)
+			//println 'Importando con audit: '+it
 			def config=EntityConfiguration.findByName(it.entityName)
 			if(!config)
 				config=crearConfiguracion(it.entityName, it.tableName, sourceDataSource)
+			
 			if(config){
 				//println 'Usando Config: '+config
 				def origenSql="select * from $config.tableName where $config.pk=?"
 				def row=sourceSql.firstRow(origenSql, [it.entityId])
-				
+				//println origenSql + "Row: "+row
 				try {
 					switch (it.action) {
 						case 'INSERT':
-						//println 'Insertando '+config.tableName
+							println 'Insertando '+row
 							SimpleJdbcInsert insert=new SimpleJdbcInsert(targetDataSource).withTableName(config.tableName)
 							if(config.excludeInsertColumns){
 								println 'Exlude: '+config.excludeInsertColumns
@@ -89,7 +90,8 @@ class ReplicaService {
 								
 							}
 							
-							insert.execute(row)
+							def res=insert.execute(row)
+							println 'Registros importados: '+res
 							sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["",it.id])
 							break
 						case 'UPDATE':
@@ -102,8 +104,8 @@ class ReplicaService {
 								
 							}
 							int updated=targetSql.executeUpdate(row, config.updateSql)
-							if(updated)
-								sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["",it.id])
+							//if(updated)
+								sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["ACTUALIZADO: "+updated,it.id])
 							break
 						case 'DELETE':
 							int eliminados=targetSql.execute("DELETE FROM $config.tableName WHERE $config.pk=?", [it.id])
@@ -116,6 +118,7 @@ class ReplicaService {
 					trasladarCollecciones(config, row, it, sourceSql, targetSql)
 					afterImport(config,row,it,sourceSql)
 				} catch (DuplicateKeyException dk) {
+					println dk.getMessage()
 					sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["",it.id])
 				
 				}catch (Exception e){
