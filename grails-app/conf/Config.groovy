@@ -90,9 +90,9 @@ log4j = {
            'net.sf.ehcache.hibernate'
 		   'grails.application.service.'
 
-    info    'grails.app','grails.app.jobs'
-	//debug   'grails.app.jobs'
-			//,'grails.app.jobs'
+    info    'grails.app.controllers',
+			'grails.app.services',
+			'grails.app.jobs'
 	
 	environments {
 		development {
@@ -186,9 +186,12 @@ grails.plugins.springsecurity.userLookup.userDomainClassName = 'com.luxor.securi
 grails.plugins.springsecurity.userLookup.authorityJoinClassName = 'com.luxor.security.UserRole'
 grails.plugins.springsecurity.authority.className = 'com.luxor.security.Role'
 
-grails.plugins.springBatch.loadTables=true
-grails.plugins.springBatch.database='h22'
 
 grails.plugins.quartz.monitor.layout='kickstart'
 grails.plugins.quartz.monitor.showTriggerNames=true
 grails.plugins.quartz.monitor.showTickingClock=true
+
+springBatch{
+	loadTables=true
+	database='MySQL'
+}

@@ -1,4 +1,5 @@
 package com.luxsoft.replica
+		
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
@@ -63,13 +64,8 @@ class ReplicaController {
 		render 'Audit Log importados: '
 	}
 	
-	def iniciarImportacion(){
-		long interval=2000l
-		
-		def res=com.luxsoft.replica.ImportadorJob.schedule(interval,-1,['sucursal':'tacuba'])
-		println 'Job:'+res
-		redirect(uri: "quartz/list")  
-	}
+	
+	
 
 }
 

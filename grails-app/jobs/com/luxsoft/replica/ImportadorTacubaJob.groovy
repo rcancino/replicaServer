@@ -8,7 +8,7 @@ class ImportadorTacubaJob {
 	def dataSourceLookup
 	def replicaService
 	
-	def group = "Replica-Importadores"
+	def group = "IMPORTADORES"
 	
     static triggers = {
 		simple name:'Tacuba-Normal', repeatInterval: 5000l // execute job once in 5 seconds
