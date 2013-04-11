@@ -6,7 +6,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 
 class ExportadorAndradeJob {
 	
-	def concurrent = false
+	def concurrent = true
 	def replicaService
 	
 	
@@ -21,6 +21,8 @@ class ExportadorAndradeJob {
 		def sucursal=Sucursal.findOrSaveWhere(nombre:"ANDRADE",dataSourceName:'andradeDataSource')
 		log.debug("Exportacion de ${oficinas.dataSourceName} a ${sucursal.dataSourceName} "+new Date())
 		
+		replicaService.exportarAuditLog(oficinas,sucursal)
+		/*
 		try{
 			replicaService.exportarAuditLog(oficinas,sucursal)
 		}catch(Exception th){
@@ -28,6 +30,6 @@ class ExportadorAndradeJob {
 			log.info(msg)
 			log.error(msg,ExceptionUtils.getRootCause(th))
 		}
-		
+		*/  
     }
 }

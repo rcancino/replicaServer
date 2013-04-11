@@ -18,6 +18,9 @@ class ReplicaService {
 	
 	def grailsApplication
 	
+	def exportadorDeClientes=new ExportadorDeClientes()
+	def exportadorDeProveedoes=new ExportadorDeProveedores()
+	
 	def findUpdateQuery(def db,String table) {
 		def ds=dataSourceLookup.getDataSource(db)
 		Sql sql=new Sql(ds)
@@ -264,7 +267,7 @@ class ReplicaService {
 					default:
 						break;
 				}
-				afterExport(config,it)
+				afterExport(config,row,sourceSql,targetSql)
 				trasladarCollecciones(config, row, it, sourceSql, targetSql)
 			} catch (Exception e) {
 				e.printStackTrace()
@@ -275,13 +278,14 @@ class ReplicaService {
 	}
 	
 	/**
-	 * TODO Hacer este metodo mas eficiente tal vez usando Script y detectando Enviroment
-	 * Posiblemente usando GroovyScriptEngine
+	 * 
 	 * @param config
 	 * @param row
+	 * @param targetSql
 	 * @return
 	 */
-	private afterExport(def config,def row){
+	private afterExport(def config,def row,def sourceSql,def targetSql){
+		/*
 		if(config.afterExport){
 			def shell=new GroovyShell(grailsApplication.classLoader,binding);
 			try {
@@ -298,6 +302,20 @@ class ReplicaService {
 			
 		}
 		//shell.evaluate
+		 * */
+		switch (config.name) {
+		case "Cliente":
+			log.debug 'Exportando colecciones del cliente'
+			//println 'Exportando existencias...'
+			exportadorDeClientes.exportarCollecciones(row.CLIENTE_ID,sourceSql,targetSql)
+			break
+			case "Proveedor":
+			exportadorDeProveedoes.exportarCollecciones(row.PROVEEDOR_ID,sourceSql,targetSql)
+			break
+		default: 
+			break;
+		}
+		 
 	}
 	
 	/**

@@ -87,8 +87,9 @@ log4j = {
            'org.codehaus.groovy.grails.orm.hibernate',      // hibernate integration
            'org.springframework',
            'org.hibernate',
-           'net.sf.ehcache.hibernate'
-		   'grails.application.service.'
+           'net.sf.ehcache.hibernate',
+		   'grails.application.service.',
+		   'grails.app'
 
     info    'grails.app.controllers',
 			'grails.app.services',
@@ -97,6 +98,7 @@ log4j = {
 	environments {
 		development {
 			debug 'grails.app.controllers','grails.app.services','grails.app.jobs'
+			error 'grails.app'
 		}
 	}
 			
