@@ -19,7 +19,7 @@ class ExportadorAndradeJob {
     def execute() {
 		def oficinas=Sucursal.findByNombre('OFICINAS')
 		def sucursal=Sucursal.findOrSaveWhere(nombre:"ANDRADE",dataSourceName:'andradeDataSource')
-		log.debug("Exportacion de ${oficinas.dataSourceName} a ${sucursal.dataSourceName} "+new Date())
+		//log.debug("Exportacion de ${oficinas.dataSourceName} a ${sucursal.dataSourceName} "+new Date())
 		
 		replicaService.exportarAuditLog(oficinas,sucursal)
 		/*

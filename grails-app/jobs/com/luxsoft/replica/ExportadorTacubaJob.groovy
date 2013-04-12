@@ -20,7 +20,7 @@ class ExportadorTacubaJob {
 		
 		def oficinas=Sucursal.findByNombre('oficinas')
 		def sucursal=Sucursal.findByNombre('tacuba')
-		log.debug("Exportacion de ${oficinas.dataSourceName} a ${sucursal.dataSourceName} "+new Date())
+		//log.debug("Exportacion de ${oficinas.dataSourceName} a ${sucursal.dataSourceName} "+new Date())
 		
 		try{
 			replicaService.exportarAuditLog(oficinas,sucursal)

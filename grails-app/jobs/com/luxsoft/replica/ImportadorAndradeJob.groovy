@@ -17,7 +17,7 @@ class ImportadorAndradeJob {
     def execute() {
 		def oficinas=Sucursal.findByNombre('OFICINAS')
 		def sucursal=Sucursal.findOrSaveWhere(nombre:"ANDRADE",dataSourceName:'andradeDataSource')
-		log.debug("Importacion de ${sucursal.dataSourceName} a ${oficinas.dataSourceName} "+new Date())
+		//log.debug("Importacion de ${sucursal.dataSourceName} a ${oficinas.dataSourceName} "+new Date())
 		replicaService.importarAuditLog(sucursal.dataSourceName,oficinas.dataSourceName)
 		/*
 		try{

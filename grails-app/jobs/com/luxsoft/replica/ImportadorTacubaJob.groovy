@@ -20,7 +20,7 @@ class ImportadorTacubaJob {
     def execute() {
 		def origen='tacubaDataSource'
 		def destino='oficinasDataSource'
-		log.debug "Importacion de ${origen} a ${destino} "+new Date()
+		//log.debug "Importacion de ${origen} a ${destino} "+new Date()
 		replicaService.importarAuditLog(origen,destino)
     }
 }

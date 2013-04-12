@@ -20,6 +20,7 @@ class ReplicaService {
 	
 	def exportadorDeClientes=new ExportadorDeClientes()
 	def exportadorDeProveedoes=new ExportadorDeProveedores()
+	def exportadorTPE=new ExportadorTPE()
 	
 	def findUpdateQuery(def db,String table) {
 		def ds=dataSourceLookup.getDataSource(db)
@@ -66,6 +67,8 @@ class ReplicaService {
 		def targetDataSource=dataSourceLookup.getDataSource(destino)
 		Sql sourceSql=new Sql(sourceDataSource)
 		Sql targetSql=new Sql(targetDataSource)
+		
+		log.debug("Importando  $origen a $destino")
 		//println "Importando logs De $origen a $destino"
 		sourceSql.eachRow("select * from audit_log where replicado is null order by id") {
 			//def model=EntityModelFactory.getModel(it.entityName)
@@ -120,14 +123,16 @@ class ReplicaService {
 					}
 					trasladarCollecciones(config, row, it, sourceSql, targetSql)
 					afterImport(config,row,it,sourceSql)
+					log.info "Importado OK:  "+row
 				} catch (DuplicateKeyException dk) {
 					println dk.getMessage()
-					sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["",it.id])
+					log.info "Registro duplicado"
+					sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["Registri duplicado",it.id])
 				
 				}catch (Exception e){
-					e.printStackTrace()
-					String err=ExceptionUtils.getRootCauseMessage(e)
-					println err
+					//e.printStackTrace()
+					log.error(e)
+					String err="Error imporando a oficinas: "ExceptionUtils.getRootCauseMessage(e)
 					sourceSql.execute("UPDATE AUDIT_LOG SET MESSAGE=?,REPLICADO=null WHERE ID=? ", [err,it.id])
 				}
 				
@@ -140,7 +145,7 @@ class ReplicaService {
 	private trasladarCollecciones(def config,def dataRow,def auditRow,Sql sourceSql,Sql targetSql){
 		if(config.name=='SolicitudDeTraslado'){
 			//Se eliminan los registros originales por tratarse de una relacion de composicion
-			log.debug 'Importando partidas de SOL: '+auditRow.entityId
+			log.debug 'Trasladando partidas de SOL: '+auditRow.entityId
 			targetSql.execute("DELETE FROM sx_solicitud_trasladosdet where SOL_ID=?",[auditRow.entityId])
 			if(auditRow.action!='DELETE'){
 				def partidas=sourceSql.rows("SELECT * FROM sx_solicitud_trasladosdet WHERE SOL_ID=?",[auditRow.entityId])
@@ -160,13 +165,6 @@ class ReplicaService {
 	 */
 	private afterImport(def config,def dataRow,def auditRow,def sourceSql){
 		
-		/*
-		if(config.afterImport){
-			Binding binding=new Binding(['config':config,'row':row])
-			def shell=new GroovyShell(binding);
-			shell.evaluate(config.postImportScrpit)
-			shell=null
-		}*/
 		
 		if(auditRow.sucursal_destino!='OFICINAS'){
 			log.debug 'Dispersando a :'+auditRow.sucursal_destino
@@ -220,7 +218,7 @@ class ReplicaService {
 		def destino=sucDestino.dataSourceName
 		def sourceDataSource=dataSourceLookup.getDataSource(origen)
 		def targetDataSource=dataSourceLookup.getDataSource(destino)
-		log.debug("Exportando registros De $origen a $destino")
+		log.debug("Exportando  $origen a $destino")
 		
 		Sql sourceSql=new Sql(sourceDataSource)
 		Sql targetSql=new Sql(targetDataSource)
@@ -285,32 +283,20 @@ class ReplicaService {
 	 * @return
 	 */
 	private afterExport(def config,def row,def sourceSql,def targetSql){
-		/*
-		if(config.afterExport){
-			def shell=new GroovyShell(grailsApplication.classLoader,binding);
-			try {
-				log.debug("Ejecutando afterExport script para: ${config}")
-				Binding binding=new Binding(['config':config,'row':row])
-				
-				shell.evaluate(config.afterExport)
-				shell=null
-			} catch (Exception e) {
-				e.printStackTrace()
-			}finally{
-				shell=null
-			}
-			
-		}
-		//shell.evaluate
-		 * */
+		
 		switch (config.name) {
 		case "Cliente":
 			log.debug 'Exportando colecciones del cliente'
 			//println 'Exportando existencias...'
 			exportadorDeClientes.exportarCollecciones(row.CLIENTE_ID,sourceSql,targetSql)
 			break
-			case "Proveedor":
+		case "Proveedor":
 			exportadorDeProveedoes.exportarCollecciones(row.PROVEEDOR_ID,sourceSql,targetSql)
+			break
+			case "TrasladoDet":
+			if(row.TIPO=='TPE'){
+				exportadorTPE.acutalizarExistencias(row,targetSql)
+			}
 			break
 		default: 
 			break;
