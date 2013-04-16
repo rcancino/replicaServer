@@ -16,6 +16,7 @@ beans = {
 		username = 'root'
 		password = 'sys'
 		url = 'jdbc:mysql://10.10.1.228/tacuba?autoReconnect=true'
+		maxWait=6000
 	}
 	
 	oficinasDataSource(BasicDataSource){
@@ -23,6 +24,15 @@ beans = {
 		username = 'root'
 		password = 'sys'
 		url = 'jdbc:mysql://10.10.1.221/certificacion?autoReconnect=true'
+		maxWait=6000
+	}
+	
+	bolivarDataSource(BasicDataSource){
+		driverClassName = 'com.mysql.jdbc.Driver'
+		username = 'root'
+		password = 'sys'
+		url = 'jdbc:mysql://10.10.1.221/bolivar'
+		maxWait=6000
 	}
 
 	switch(Environment.current) {
@@ -33,6 +43,7 @@ beans = {
 				username="root"
 				password="sys"
 				suppressClose="false"
+				maxWait=6000
 			}
 		break
 		case Environment.DEVELOPMENT:
@@ -40,20 +51,23 @@ beans = {
 				driverClassName = 'com.mysql.jdbc.Driver'
 				username = 'root'
 				password = 'sys'
-				url = 'jdbc:mysql://localhost/tacuba?autoReconnect=true'
+				url = 'jdbc:mysql://localhost/tacuba'
+				maxWait=6000
 			}
 			andradeDataSource(BasicDataSource){
 				driverClassName = 'com.mysql.jdbc.Driver'
 				username = 'root'
 				password = 'sys'
-				url = 'jdbc:mysql://localhost/andrade?autoReconnect=true'
+				url = 'jdbc:mysql://localhost/andrade'
+				maxWait=6000
 			}
 		
 			oficinasDataSource(BasicDataSource){
 				driverClassName = 'com.mysql.jdbc.Driver'
 				username = 'root'
 				password = 'sys'
-				url = 'jdbc:mysql://localhost/produccion?autoReconnect=true'
+				url = 'jdbc:mysql://localhost/produccion'
+				maxWait=6000
 			}
 		break
 	}

@@ -223,6 +223,7 @@ class ReplicaService {
 		Sql sourceSql=new Sql(sourceDataSource)
 		Sql targetSql=new Sql(targetDataSource)
 		
+		 
 		sourceSql.eachRow("select * from audit_log where replicado is null  and sucursal_destino=? order by id",[sucDestino.nombre]) {
 			
 			def config=EntityConfiguration.findByName(it.entityName)
@@ -268,7 +269,7 @@ class ReplicaService {
 				afterExport(config,row,sourceSql,targetSql)
 				trasladarCollecciones(config, row, it, sourceSql, targetSql)
 			} catch (Exception e) {
-				e.printStackTrace()
+				//e.printStackTrace()
 				String err=ExceptionUtils.getRootCauseMessage(e)
 				sourceSql.execute("UPDATE AUDIT_LOG SET MESSAGE=? WHERE ID=? ", [err,it.id])
 			}
