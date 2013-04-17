@@ -194,9 +194,9 @@ grails.plugins.springsecurity.userLookup.authorityJoinClassName = 'com.luxor.sec
 grails.plugins.springsecurity.authority.className = 'com.luxor.security.Role'
 
 
-grails.plugins.quartz.monitor.layout='kickstart'
-grails.plugins.quartz.monitor.showTriggerNames=true
-grails.plugins.quartz.monitor.showTickingClock=true
+quartz.monitor.layout='kickstart'
+quartz.monitor.showTriggerNames=true
+quartz.monitor.showTickingClock=true
 
 springBatch{
 	loadTables=true
