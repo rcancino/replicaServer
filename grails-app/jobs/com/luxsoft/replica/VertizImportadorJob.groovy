@@ -9,23 +9,23 @@ import org.quartz.PersistJobDataAfterExecution;
 
 @DisallowConcurrentExecution
 @PersistJobDataAfterExecution
-class ImportadorBolivarJob {
+class VertizImportadorJob {
 	
 	def concurrent = false
 	def dataSourceLookup
 	def replicaService
 	
-	def group = "BOLIVAR-REPLICA"
-	static sucursalName="BOLIVAR"
+	def group = "VERTIZ-REPLICA"
+	static sucursalName="VERTIZ"
 	
-	static triggers = {
+    static triggers = {
 		simple name:sucursalName+'-IMPORTADOR',startDelay:6000l, repeatInterval: 10000l // execute job once in 5 seconds
-	  //simple name:'importadorDeTacubaTrigger',startDelay:3000l,repeatInterval: 5000l,repeatCount:-1 // execute job once in 5 seconds
+      //simple name:'importadorDeTacubaTrigger',startDelay:3000l,repeatInterval: 5000l,repeatCount:-1 // execute job once in 5 seconds
 	  //simple name:'simpleTrigger', startDelay:10000, repeatInterval: 30000, repeatCount: 10
 		
-	}
+    }
 
-	def execute(context) {
+    def execute(context) {
 		//println context
 		def dataMap= context.mergedJobDataMap
 		int count = dataMap.errorCount?:0;
@@ -49,7 +49,7 @@ class ImportadorBolivarJob {
 			
 		//println "Importando  de ${sucursal?.dataSourceName} "+new Date();
 		try {
-			replicaService.importarAuditLog(sucursal.dataSourceName,oficinas.dataSourceName)
+			//replicaService.importarAuditLog(sucursal.dataSourceName,oficinas.dataSourceName)
 			dataMap.errorCount=0;
 		} catch (Exception th) {
 			def errorMessage=ExceptionUtils.getRootCauseMessage(th)
@@ -63,5 +63,9 @@ class ImportadorBolivarJob {
 			e2.setRefireImmediately(true);
 			throw e2;
 		}
-	}
+    }
 }
+
+
+
+

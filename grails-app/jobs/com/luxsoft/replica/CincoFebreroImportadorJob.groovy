@@ -9,14 +9,14 @@ import org.quartz.PersistJobDataAfterExecution;
 
 @DisallowConcurrentExecution
 @PersistJobDataAfterExecution
-class ImportadorBolivarJob {
+class CincoFebreroImportadorJob {
 	
 	def concurrent = false
 	def dataSourceLookup
 	def replicaService
 	
-	def group = "BOLIVAR-REPLICA"
-	static sucursalName="BOLIVAR"
+	def group = "CF5FEBRERO-REPLICA"
+	static sucursalName="CF5FEBRERO" 
 	
 	static triggers = {
 		simple name:sucursalName+'-IMPORTADOR',startDelay:6000l, repeatInterval: 10000l // execute job once in 5 seconds
@@ -28,7 +28,7 @@ class ImportadorBolivarJob {
 	def execute(context) {
 		//println context
 		def dataMap= context.mergedJobDataMap
-		int count = dataMap.errorCount?:0;
+		int count = dataMap.errorCount?:0; 
 		
 		// allow 5 retries
 		if(count >= 5){

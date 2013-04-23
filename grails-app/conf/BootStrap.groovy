@@ -22,10 +22,13 @@ class BootStrap {
 				,enabled:true).save(flush:true);
 			}
     	}
-		
-		def tacuba=Sucursal.findOrSaveWhere(nombre:"TACUBA",dataSourceName:'tacubaDataSource')
 		def oficinas=Sucursal.findOrSaveWhere(nombre:'OFICINAS',dataSourceName:'oficinasDataSource')
+		def tacuba=Sucursal.findOrSaveWhere(nombre:"TACUBA",dataSourceName:'tacubaDataSource')
 		def andrade=Sucursal.findOrSaveWhere(nombre:"ANDRADE",dataSourceName:'andradeDataSource')
+		def bolivar=Sucursal.findOrSaveWhere(nombre:"BOLIVAR",dataSourceName:'bolivarDataSource')
+		def calle4=Sucursal.findOrSaveWhere(nombre:"CALLE4",dataSourceName:'calle4DataSource')
+		def cincoFebrero=Sucursal.findOrSaveWhere(nombre:"CF5FEBRERO",dataSourceName:'cincoFebreroDataSource')
+		def vertiz=Sucursal.findOrSaveWhere(nombre:"VERTIZ",dataSourceName:'vertizDataSource')
 		
 		
     }

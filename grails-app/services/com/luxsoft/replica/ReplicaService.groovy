@@ -34,7 +34,7 @@ class ReplicaService {
 			WHERE (TABLE_SCHEMA = ?)
 			AND (TABLE_NAME = ?)
 			AND (COLUMN_KEY = 'PRI');
-		""",['tacuba',table]).COLUMN_NAME
+		""",['produccion',table]).COLUMN_NAME
 		return pk
 	}
 
@@ -44,14 +44,14 @@ class ReplicaService {
 			WHERE (TABLE_SCHEMA = ?)
 			AND (TABLE_NAME = ?)
 			AND (COLUMN_KEY = 'PRI');
-		""",['tacuba',table]).COLUMN_NAME
+		""",['produccion',table]).COLUMN_NAME
 		
 		def columns=sql.rows("""
 			SELECT COLUMN_NAME FROM information_schema.COLUMNS
 			WHERE (TABLE_SCHEMA = ?)
 			AND (TABLE_NAME = ?)
 			AND (COLUMN_KEY <> 'PRI');
-		""",['tacuba',table])
+		""",['produccion',table])
 			
 		def res="UPDATE $table SET "
 		res+=columns.collect {it.COLUMN_NAME+"=:"+it.COLUMN_NAME}.join(",")
@@ -68,73 +68,89 @@ class ReplicaService {
 		Sql sourceSql=new Sql(sourceDataSource)
 		Sql targetSql=new Sql(targetDataSource)
 		
-		log.debug("Importando  $origen a $destino")
-		//println "Importando logs De $origen a $destino"
+		//log.debug("Importando  $origen a $destino")
+		
+		def rows=sourceSql.rows("select * from audit_log where replicado is null order by id")
+		//println "Importando logs De $origen a $destino Audits: ${rows.size()}"
+		log.info("Importando logs De $origen a $destino Audits: ${rows.size()}")
+		
 		sourceSql.eachRow("select * from audit_log where replicado is null order by id") {
-			//def model=EntityModelFactory.getModel(it.entityName)
+		
 			//println 'Importando con audit: '+it
 			def config=EntityConfiguration.findByName(it.entityName)
-			if(!config)
+			if(!config){
+				//println 'Generando un config nuevo:' 
 				config=crearConfiguracion(it.entityName, it.tableName, sourceDataSource)
+			}
 			
 			if(config){
 				//println 'Usando Config: '+config
-				def origenSql="select * from $config.tableName where $config.pk=?"
-				def row=sourceSql.firstRow(origenSql, [it.entityId])
-				//println origenSql + "Row: "+row
-				try {
-					switch (it.action) {
-						case 'INSERT':
-							println 'Insertando '+row
-							SimpleJdbcInsert insert=new SimpleJdbcInsert(targetDataSource).withTableName(config.tableName)
-							if(config.excludeInsertColumns){
-								println 'Exlude: '+config.excludeInsertColumns
-								def cols=config.excludeInsertColumns.split(',')
-								cols.each{
-									row.put(it,null)
-								}
-								
-							}
-							
-							def res=insert.execute(row)
-							println 'Registros importados: '+res
-							sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["",it.id])
-							break
-						case 'UPDATE':
-							if(config.excludeUpdateColumns){
-								println 'Exlude: '+config.excludeInsertColumns
-								def cols=config.excludeUpdateColumns.split(',')
-								cols.each{
-									row.put(it,null)
-								}
-								
-							}
-							int updated=targetSql.executeUpdate(row, config.updateSql)
-							//if(updated)
-								sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["ACTUALIZADO: "+updated,it.id])
-							break
-						case 'DELETE':
-							int eliminados=targetSql.execute("DELETE FROM $config.tableName WHERE $config.pk=?", [it.id])
-							if(eliminados)
-								sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["NO SE PUDO ELIMIAR",it.id])
-							break;
-						default:
-							break;
-					}
-					trasladarCollecciones(config, row, it, sourceSql, targetSql)
-					afterImport(config,row,it,sourceSql)
-					log.info "Importado OK:  "+row
-				} catch (DuplicateKeyException dk) {
-					println dk.getMessage()
-					log.info "Registro duplicado"
-					sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["Registri duplicado",it.id])
 				
-				}catch (Exception e){
-					//e.printStackTrace()
-					log.error(e)
-					String err="Error imporando a oficinas: "ExceptionUtils.getRootCauseMessage(e)
-					sourceSql.execute("UPDATE AUDIT_LOG SET MESSAGE=?,REPLICADO=null WHERE ID=? ", [err,it.id])
+				def origenSql="select * from $config.tableName where $config.pk=?"
+				//println origenSql
+				def row=sourceSql.firstRow(origenSql, [it.entityId])
+				if(it.action=='DELETE' || row){
+					//println origenSql + "Row: "+row
+					try {
+						switch (it.action) {
+							case 'INSERT':
+								//println 'Insertando '+row
+								SimpleJdbcInsert insert=new SimpleJdbcInsert(targetDataSource).withTableName(config.tableName)
+								if(config.excludeInsertColumns){
+									//println 'Exlude: '+config.excludeInsertColumns
+									def cols=config.excludeInsertColumns.split(',')
+									cols.each{
+										row.put(it,null)
+									}
+									
+								}
+								
+								def res=insert.execute(row)
+								//println 'Registros importados: '+res
+								sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["",it.id])
+								break
+							case 'UPDATE':
+								if(config.excludeUpdateColumns){
+									println 'Exlude: '+config.excludeInsertColumns
+									def cols=config.excludeUpdateColumns.split(',')
+									cols.each{
+										row.put(it,null)
+									}
+									
+								}
+								int updated=targetSql.executeUpdate(row, config.updateSql)
+								//if(updated)
+									sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["ACTUALIZADO: "+updated,it.id])
+								break
+							case 'DELETE':
+								targetSql.execute("DELETE FROM ${config.tableName} WHERE ${config.pk}=?",[it.entityId])
+								def res=targetSql.firstRow("SELECT *  FROM ${config.tableName} WHERE ${config.pk}=?",[it.entityId])
+								if(!res)
+									sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["",it.id])
+								break;
+							default:
+								break;
+						}
+						trasladarCollecciones(config, row, it, sourceSql, targetSql)
+						afterImport(config,row,it,sourceSql)
+						log.info "Importado OK:  "+row
+					} catch (DuplicateKeyException dk) {
+						println dk.getMessage()
+						log.info "Registro duplicado"
+						sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["Registri duplicado",it.id])
+					
+					}catch (Exception e){
+						//e.printStackTrace()
+						log.error(e)
+						String err="Error imporando a oficinas: "+ExceptionUtils.getRootCauseMessage(e)
+						sourceSql.execute("UPDATE AUDIT_LOG SET MESSAGE=?,REPLICADO=null WHERE ID=? ", [err,it.id])
+					}
+					
+				}else{
+					//println 'Registro inexistente para Audit: '+it
+					sourceSql.execute("UPDATE AUDIT_LOG SET MESSAGE=? WHERE ID=? ", ['REGISTRO INEXISTENTE',it.id])
 				}
+				
 				
 			}else
 				sourceSql.execute("UPDATE AUDIT_LOG SET MESSAGE=? WHERE ID=? ", ['NO REPLICABLE POR FALTA DE CONFIGURACION',it.id])
@@ -182,8 +198,14 @@ class ReplicaService {
 		
 		switch (config.name) {
 		case 'Existencia':
+			log.info("Dispersando existencia")
 			dispersar(config, dataRow,auditRow)
-			break;		
+			break;
+		case 'Cliente':
+			log.info("Dispersando clientes")
+			//auditRow.action='INSERT'
+			dispersar(config, dataRow,auditRow)
+			break;
 		default:
 			break;
 		}
@@ -192,13 +214,15 @@ class ReplicaService {
 	
 	def dispersar(def config,def dataRow,def auditRow){
 		def destinos=getDestinos();
-		log.debug 'Dispersando movimiento a las sucursales..'+destinos
-		
+		//log.debug 'Dispersando movimiento a las sucursales..'+destinos
+		def action=auditRow.action
+		if(config.name=='Cliente')
+			action='INSERT'
 		destinos.each{destino->
 			if(destino!=auditRow.sucursal_origen){
 				log.debug 'Dispersando a :'+destino
 				def auditLog=new AuditLog(
-					action: auditRow.action
+					action: action
 					,entityId: auditRow.entityId
 					,entityName: auditRow.entityName
 					,tableName: auditRow.tableName
@@ -207,7 +231,7 @@ class ReplicaService {
 					,ip: auditRow.ip,)
 					.save(failOnError:true)
 			}else{
-				log.debug 'Ignorando dispersion a :'+destino
+				//log.debug 'Ignorando dispersion a :'+destino
 			}
 		}
 			
@@ -218,14 +242,15 @@ class ReplicaService {
 		def destino=sucDestino.dataSourceName
 		def sourceDataSource=dataSourceLookup.getDataSource(origen)
 		def targetDataSource=dataSourceLookup.getDataSource(destino)
-		log.debug("Exportando  $origen a $destino")
+		
 		
 		Sql sourceSql=new Sql(sourceDataSource)
 		Sql targetSql=new Sql(targetDataSource)
 		
-		 
-		sourceSql.eachRow("select * from audit_log where replicado is null  and sucursal_destino=? order by id",[sucDestino.nombre]) {
-			
+		def rows=sourceSql.rows("select * from audit_log where replicado is null  and sucursal_destino=? order by id",[sucDestino.nombre])
+		log.info("Exportando   a $destino Audits: "+rows.size())
+		
+		rows.each{
 			def config=EntityConfiguration.findByName(it.entityName)
 			if(!config){
 				config=crearConfiguracion(it.entityName, it.tableName, sourceDataSource)
@@ -348,13 +373,16 @@ class ReplicaService {
 		config.save(failOnError:true)
 	}
 	
-	def destinos
+	//def destinos
 	
 	def getDestinos(){
+		/*
 		if(!destinos){
 			log.debug 'Cargando destinos'
 			destinos=Sucursal.findAllByActivaAndNombreNotEqual('true','OFICINAS').collect({it.nombre})
 		}
 		return destinos
+		*/
+		return  Sucursal.findAllByActivaAndNombreNotEqual('true','OFICINAS').collect({it.nombre})
 	}
 }

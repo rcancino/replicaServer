@@ -5,7 +5,8 @@ import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionException;
 import org.quartz.PersistJobDataAfterExecution;
-import org.springframework.jdbc.datasource.lookup.DataSourceLookupFailureException;
+
+
 
 
 @DisallowConcurrentExecution
@@ -13,19 +14,21 @@ import org.springframework.jdbc.datasource.lookup.DataSourceLookupFailureExcepti
 class ExportadorBolivarJob {
 	
 	def concurrent = false
+	def dataSourceLookup
 	def replicaService
 	
+	static sucursalName="BOLIVAR"
+	def group = sucursalName+"-REPLICA"
 	
-	def group = "Exportadores"
 	
-	 
-    
 	static triggers = {
-      simple name:'Bolivar-Exp',repeatInterval: 5000l, startDelay:10000 // execute job once in 5 seconds
-    }
-
-    def execute(context) {
+		simple name:sucursalName+'-EXPORTADOR',startDelay:6000l, repeatInterval: 10000l // execute job once in 5 seconds
+	  //simple name:'importadorDeTacubaTrigger',startDelay:3000l,repeatInterval: 5000l,repeatCount:-1 // execute job once in 5 seconds
+	  //simple name:'simpleTrigger', startDelay:10000, repeatInterval: 30000, repeatCount: 10
 		
+	}
+
+	def execute(context) {
 		
 		def dataMap= context.mergedJobDataMap
 		int count = dataMap.errorCount?:0;
@@ -36,13 +39,20 @@ class ExportadorBolivarJob {
 			JobExecutionException e = new JobExecutionException("Intentos excedidos "+dataMap.errorMessage);
 			//make sure it doesn't run again
 			e.setUnscheduleAllTriggers(true);
-			throw e; 
+			throw e;
 		}
-        def oficinas=Sucursal.findByNombre('OFICINAS')
-		def sucursal=Sucursal.findOrSaveWhere(nombre:"BOLIVAR",dataSourceName	:'bolivarDataSource')
-		log.debug "Exportando a ${sucursal?.dataSourceName} "+new Date();
-		try { 
-			//replicaService.exportarAuditLog(oficinas,sucursal)
+		
+		def oficinas=Sucursal.findByNombre('OFICINAS')
+		def sucursal=Sucursal.findByNombre(sucursalName)
+		if(!sucursal){
+			JobExecutionException e = new JobExecutionException("No esta dada de alta la sucursal: "+sucursalName);
+			e.setUnscheduleAllTriggers(true);
+			throw e;
+		}
+			
+		//println "Exportando  a ${sucursal?.dataSourceName} "+new Date();
+		try {
+			replicaService.exportarAuditLog(oficinas,sucursal)
 			dataMap.errorCount=0;
 		} catch (Exception th) {
 			def errorMessage=ExceptionUtils.getRootCauseMessage(th)
@@ -50,11 +60,12 @@ class ExportadorBolivarJob {
 			dataMap.errorCount=count;
 			dataMap.errorMessage=errorMessage
 			JobExecutionException e2 = new JobExecutionException(errorMessage);
+			//println 'Pausa en error: '+ExceptionUtils.getRootCauseMessage(th)
 			Thread.sleep(3000); //sleep for some time
 			//	fire it again
 			e2.setRefireImmediately(true);
 			throw e2;
 		}
 		
-    }
+	}
 }

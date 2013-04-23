@@ -15,7 +15,7 @@ environments {
 		
 		dataSource {
 			dbCreate = "update"
-			url = "jdbc:mysql://localhost/produccion"
+			url = "jdbc:mysql://10.10.1.221/produccion"
 			driverClassName = "com.mysql.jdbc.Driver"
 			dialect = org.hibernate.dialect.MySQL5InnoDBDialect
 			username = "root"

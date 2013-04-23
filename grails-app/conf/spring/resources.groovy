@@ -11,70 +11,51 @@ beans = {
 	customPropertyEditorRegistrar(CustomDateEditorRegistrar)
 	
 	
-	tacubaDataSource(BasicDataSource){
+	abstractDataSource(BasicDataSource){bean->
+		bean.'abstract'=true	
 		driverClassName = 'com.mysql.jdbc.Driver'
 		username = 'root'
 		password = 'sys'
-		url = 'jdbc:mysql://10.10.1.228/tacuba?autoReconnect=true'
 		maxWait=6000
 	}
 	
-	oficinasDataSource(BasicDataSource){
-		driverClassName = 'com.mysql.jdbc.Driver'
-		username = 'root'
-		password = 'sys'
-		url = 'jdbc:mysql://10.10.1.221/certificacion?autoReconnect=true'
-		maxWait=6000
-	}
-	
-	bolivarDataSource(BasicDataSource){
-		driverClassName = 'com.mysql.jdbc.Driver'
-		username = 'root'
-		password = 'sys'
-		url = 'jdbc:mysql://10.10.1.221/bolivar'
-		maxWait=6000
-	}
 
 	switch(Environment.current) {
-		case Environment.TEST:
-			tacubaDataSource(SingleConnectionDataSource){
-				driverClassName="com.mysql.jdbc.Driver"
-				url="jdbc:mysql://10.10.1.228/tacuba?autoReconnect=true"
-				username="root"
-				password="sys"
-				suppressClose="false"
-				maxWait=6000
-			}
+		case Environment.TEST:			
 		break
 		case Environment.DEVELOPMENT:
-			tacubaDataSource(BasicDataSource){
-				driverClassName = 'com.mysql.jdbc.Driver'
-				username = 'root'
-				password = 'sys'
-				url = 'jdbc:mysql://localhost/tacuba'
-				maxWait=6000
+			oficinasDataSource(){bean->
+				bean.parent = abstractDataSource
+				url = 'jdbc:mysql://10.10.1.221/produccion'
 			}
-			andradeDataSource(BasicDataSource){
-				driverClassName = 'com.mysql.jdbc.Driver'
-				username = 'root'
-				password = 'sys'
-				url = 'jdbc:mysql://localhost/andrade'
-				maxWait=6000
+			tacubaDataSource(){bean->
+				bean.parent = abstractDataSource
+				url = 'jdbc:mysql://10.10.1.101/tacuba_produccion'
 			}
-		
-			oficinasDataSource(BasicDataSource){
-				driverClassName = 'com.mysql.jdbc.Driver'
-				username = 'root'
-				password = 'sys'
-				url = 'jdbc:mysql://localhost/produccion'
-				maxWait=6000
+			andradeDataSource(){bean->
+				bean.parent = abstractDataSource
+				url = 'jdbc:mysql://10.10.2.1/produccion'
+			}
+			bolivarDataSource(){bean->
+				bean.parent = abstractDataSource
+				url = 'jdbc:mysql://10.10.4.1/produccion'
+			}
+			cincoFebreroDataSource(){bean->
+				bean.parent = abstractDataSource
+				url = 'jdbc:mysql://10.10.7.1/produccion'
+			}
+			vertizDataSource(){bean->
+				bean.parent = abstractDataSource
+				url = 'jdbc:mysql://10.10.2.100/produccion'
+			}
+			calle4DataSource(){bean->
+				bean.parent = abstractDataSource
+				url = 'jdbc:mysql://10.10.5.1/produccion'
 			}
 		break
 	}
 
-	dataSourceLookup(BeanFactoryDataSourceLookup){
-		
-	}
+	dataSourceLookup(BeanFactoryDataSourceLookup){}
 	
 	stepScope(StepScope){}
 	

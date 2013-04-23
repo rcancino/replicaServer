@@ -1,35 +1,70 @@
 package com.luxsoft.replica
 
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.quartz.DisallowConcurrentExecution;
+import org.quartz.JobDataMap;
+import org.quartz.JobExecutionException;
+import org.quartz.PersistJobDataAfterExecution;
 
 
 
+
+@DisallowConcurrentExecution
+@PersistJobDataAfterExecution
 class ExportadorAndradeJob {
 	
-	def concurrent = true
+	def concurrent = false
+	def dataSourceLookup
 	def replicaService
 	
+	def group = "ANDRADE-REPLICA"
+	static sucursalName="ANDRADE"
 	
-	def group = "Replica-Exportadores"
-	
-    static triggers = {
-		simple name:'Exportacion_Andrade',repeatInterval: 5000l // execute job once in 5 seconds
-    }
-
-    def execute() {
-		def oficinas=Sucursal.findByNombre('OFICINAS')
-		def sucursal=Sucursal.findOrSaveWhere(nombre:"ANDRADE",dataSourceName:'andradeDataSource')
-		//log.debug("Exportacion de ${oficinas.dataSourceName} a ${sucursal.dataSourceName} "+new Date())
+	static triggers = {
+		simple name:sucursalName+'-EXPORTADOR',startDelay:6000l, repeatInterval: 10000l // execute job once in 5 seconds
+	  //simple name:'importadorDeTacubaTrigger',startDelay:3000l,repeatInterval: 5000l,repeatCount:-1 // execute job once in 5 seconds
+	  //simple name:'simpleTrigger', startDelay:10000, repeatInterval: 30000, repeatCount: 10
 		
-		replicaService.exportarAuditLog(oficinas,sucursal)
-		/*
-		try{
-			replicaService.exportarAuditLog(oficinas,sucursal)
-		}catch(Exception th){
-			def msg="Error exportand a tacuba "+ExceptionUtils.getRootCauseMessage(th)			
-			log.info(msg)
-			log.error(msg,ExceptionUtils.getRootCause(th))
+	}
+
+	def execute(context) {
+		
+		def dataMap= context.mergedJobDataMap
+		int count = dataMap.errorCount?:0;
+		
+		// allow 5 retries
+		if(count >= 5){
+			log.info 'Errores reportados por exportador sobre pasa el limite, se parara el proceso:'
+			JobExecutionException e = new JobExecutionException("Intentos excedidos "+dataMap.errorMessage);
+			//make sure it doesn't run again
+			e.setUnscheduleAllTriggers(true);
+			throw e;
 		}
-		*/  
-    }
+		
+		def oficinas=Sucursal.findByNombre('OFICINAS')
+		def sucursal=Sucursal.findByNombre(sucursalName)
+		if(!sucursal){
+			JobExecutionException e = new JobExecutionException("No esta dada de alta la sucursal: "+sucursalName);
+			e.setUnscheduleAllTriggers(true);
+			throw e;
+		}
+			
+		//println "Exportando  a ${sucursal?.dataSourceName} "+new Date();
+		try {
+			replicaService.exportarAuditLog(oficinas,sucursal)
+			dataMap.errorCount=0;
+		} catch (Exception th) {
+			def errorMessage=ExceptionUtils.getRootCauseMessage(th)
+			//count++;
+			dataMap.errorCount=count;
+			dataMap.errorMessage=errorMessage
+			JobExecutionException e2 = new JobExecutionException(errorMessage);
+			//println 'Pausa en error: '+ExceptionUtils.getRootCauseMessage(th)
+			Thread.sleep(3000); //sleep for some time
+			//	fire it again
+			e2.setRefireImmediately(true);
+			throw e2;
+		}
+		
+	}
 }

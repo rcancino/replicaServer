@@ -18,15 +18,10 @@ class ReplicaController {
 	def tacubaDataSource
 	def oficinasDataSource
 	
-	
+	def procesosProgramadosService
 
-	def index(){
-		redirect action:"importarAuditLog"
-	}
-	/*
-	def test2(){
-		render replicaService.findUpdateQuery('tacubaDataSource','SX_FICHAS')
-	}*/
+	def index(){}
+	
 	
 	def instalarConfiguraciones(){
 		replicaService.instalarConfiguraciones()
@@ -64,7 +59,10 @@ class ReplicaController {
 		render 'Audit Log importados: '
 	}
 	
-	
+	def actualizarVentasPorFacturista(){
+		procesosProgramadosService.actualizarVentasPorFacturista(null)
+		render 'Ventas por facturista actualizadas'
+	}	
 	
 
 }

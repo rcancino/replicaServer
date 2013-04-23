@@ -7,32 +7,34 @@ import org.quartz.JobExecutionException;
 import org.quartz.PersistJobDataAfterExecution;
 
 
+
+
 @DisallowConcurrentExecution
 @PersistJobDataAfterExecution
-class ImportadorBolivarJob {
+class Calle4ExportadorJob {
 	
 	def concurrent = false
 	def dataSourceLookup
 	def replicaService
 	
-	def group = "BOLIVAR-REPLICA"
-	static sucursalName="BOLIVAR"
+	def group = "CALLE4-REPLICA"
+	static sucursalName="CALLE4"
 	
 	static triggers = {
-		simple name:sucursalName+'-IMPORTADOR',startDelay:6000l, repeatInterval: 10000l // execute job once in 5 seconds
+		simple name:sucursalName+'-EXPORTADOR',startDelay:6000l, repeatInterval: 10000l // execute job once in 5 seconds
 	  //simple name:'importadorDeTacubaTrigger',startDelay:3000l,repeatInterval: 5000l,repeatCount:-1 // execute job once in 5 seconds
 	  //simple name:'simpleTrigger', startDelay:10000, repeatInterval: 30000, repeatCount: 10
 		
 	}
 
 	def execute(context) {
-		//println context
+		
 		def dataMap= context.mergedJobDataMap
 		int count = dataMap.errorCount?:0;
 		
 		// allow 5 retries
 		if(count >= 5){
-			log.info 'Errores reportados por importador sobre pasa el limite, se parara el proceso:'
+			log.info 'Errores reportados por exportador sobre pasa el limite, se parara el proceso:'
 			JobExecutionException e = new JobExecutionException("Intentos excedidos "+dataMap.errorMessage);
 			//make sure it doesn't run again
 			e.setUnscheduleAllTriggers(true);
@@ -47,9 +49,9 @@ class ImportadorBolivarJob {
 			throw e;
 		}
 			
-		//println "Importando  de ${sucursal?.dataSourceName} "+new Date();
+		//println "Exportando  a ${sucursal?.dataSourceName} "+new Date();
 		try {
-			replicaService.importarAuditLog(sucursal.dataSourceName,oficinas.dataSourceName)
+			replicaService.exportarAuditLog(oficinas,sucursal)
 			dataMap.errorCount=0;
 		} catch (Exception th) {
 			def errorMessage=ExceptionUtils.getRootCauseMessage(th)
@@ -63,5 +65,6 @@ class ImportadorBolivarJob {
 			e2.setRefireImmediately(true);
 			throw e2;
 		}
+		
 	}
 }
