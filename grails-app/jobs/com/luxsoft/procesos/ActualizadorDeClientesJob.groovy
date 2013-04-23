@@ -9,9 +9,10 @@ class ActualizadorDeClientesJob {
 	def dataSourceLookup
 	
 	static transactional = true
+	def concurrent = false
 	
 	static triggers = {
-      simple repeatInterval: 20000l // execute job once in 5 seconds
+      simple repeatInterval: 60000l // execute job once in 5 seconds
 		//simple repeatCount:0,startDelay:5000 //LrepeatInterval: 20000l // execute job once in 5 seconds
     }
 

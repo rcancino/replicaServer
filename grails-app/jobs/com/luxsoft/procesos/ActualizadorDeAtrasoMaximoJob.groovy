@@ -4,6 +4,7 @@ package com.luxsoft.procesos
 
 class ActualizadorDeAtrasoMaximoJob {
 	
+	def concurrent = false
 	
 	def procesosProgramadosService
 	
