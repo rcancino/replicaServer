@@ -19,7 +19,7 @@ class ImportadorAndradeJob {
 	static sucursalName="ANDRADE"
 	
 	static triggers = {
-		simple name:sucursalName+'-IMPORTADOR',startDelay:6000l, repeatInterval: 10000l // execute job once in 5 seconds
+		simple name:sucursalName+'-IMPORTADOR',startDelay:6000l, repeatInterval: 5000l // execute job once in 5 seconds
 	  //simple name:'importadorDeTacubaTrigger',startDelay:3000l,repeatInterval: 5000l,repeatCount:-1 // execute job once in 5 seconds
 	  //simple name:'simpleTrigger', startDelay:10000, repeatInterval: 30000, repeatCount: 10
 		

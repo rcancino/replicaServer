@@ -8,6 +8,8 @@ class AjusteDeDestinosJob {
 	
 	def dataSourceLookup
 	
+	def concurrent = false
+	
 	static transactional = false
 	
     static triggers = {

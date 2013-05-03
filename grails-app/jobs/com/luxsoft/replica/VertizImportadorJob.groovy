@@ -49,7 +49,7 @@ class VertizImportadorJob {
 			
 		//println "Importando  de ${sucursal?.dataSourceName} "+new Date();
 		try {
-			//replicaService.importarAuditLog(sucursal.dataSourceName,oficinas.dataSourceName)
+			replicaService.importarAuditLog(sucursal.dataSourceName,oficinas.dataSourceName)
 			dataMap.errorCount=0;
 		} catch (Exception th) {
 			def errorMessage=ExceptionUtils.getRootCauseMessage(th)

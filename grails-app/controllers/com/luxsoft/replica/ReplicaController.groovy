@@ -62,6 +62,15 @@ class ReplicaController {
 	def actualizarVentasPorFacturista(){
 		procesosProgramadosService.actualizarVentasPorFacturista(null)
 		render 'Ventas por facturista actualizadas'
+	}
+	
+	def existenciaRemota(){
+		println 'Actualizando existencia remota...'
+		Sql sql=new Sql(tacubaDataSource)
+		ExportadorTPE e=new ExportadorTPE()
+		def row=sql.firstRow("select * from SX_INVENTARIO_TRD where INVENTARIO_ID=?",['8a8a848a-3e666b9e-013e-67a34297-0035'])
+		e.acutalizarExistencias(row, sql)
+		
 	}	
 	
 

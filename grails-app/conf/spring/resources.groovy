@@ -21,6 +21,38 @@ beans = {
 	
 
 	switch(Environment.current) {
+		
+		case Environment.PRODUCTION:
+		
+		oficinasDataSource(){bean->
+			bean.parent = abstractDataSource
+			url = 'jdbc:mysql://10.10.1.221/produccion'
+		}
+		tacubaDataSource(){bean->
+			bean.parent = abstractDataSource
+			url = 'jdbc:mysql://10.10.1.101/tacuba_produccion'
+		}
+		andradeDataSource(){bean->
+			bean.parent = abstractDataSource
+			url = 'jdbc:mysql://10.10.2.1/produccion'
+		}
+		bolivarDataSource(){bean->
+			bean.parent = abstractDataSource
+			url = 'jdbc:mysql://10.10.4.1/produccion'
+		}
+		cincoFebreroDataSource(){bean->
+			bean.parent = abstractDataSource
+			url = 'jdbc:mysql://10.10.7.1/produccion'
+		}
+		vertizDataSource(){bean->
+			bean.parent = abstractDataSource
+			url = 'jdbc:mysql://10.10.2.100/produccion'
+		}
+		calle4DataSource(){bean->
+			bean.parent = abstractDataSource
+			url = 'jdbc:mysql://10.10.5.1/produccion'
+		}
+	break
 		case Environment.TEST:			
 		break
 		case Environment.DEVELOPMENT:
