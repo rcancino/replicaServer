@@ -70,9 +70,9 @@ class ReplicaService {
 		
 		//log.debug("Importando  $origen a $destino")
 		
-		def rows=sourceSql.rows("select * from audit_log where replicado is null order by id")
+		//def rows=sourceSql.rows("select * from audit_log where replicado is null order by id")
 		//println "Importando logs De $origen a $destino Audits: ${rows.size()}"
-		log.info("Importando logs De $origen a $destino Audits: ${rows.size()}")
+		//log.info("Importando logs De $origen a $destino Audits: ${rows.size()}")
 		
 		sourceSql.eachRow("select * from audit_log where replicado is null order by id") {
 		
@@ -123,10 +123,14 @@ class ReplicaService {
 									sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["ACTUALIZADO: "+updated,it.id])
 								break
 							case 'DELETE':
-								targetSql.execute("DELETE FROM ${config.tableName} WHERE ${config.pk}=?",[it.entityId])
+								
+								if(['SX_LP_PROVS','SX_LP_PROVS_DET','SX_LP_CLIENTE_DET','SX_LP_CLIENTE'].contains(config.tableName)){
+									targetSql.execute("DELETE FROM ${config.tableName} WHERE ${config.pk}=?",[it.entityId.toLong()])
+								}else{
+									targetSql.execute("DELETE FROM ${config.tableName} WHERE ${config.pk}=?",[it.entityId])
+								}
 								def res=targetSql.firstRow("SELECT *  FROM ${config.tableName} WHERE ${config.pk}=?",[it.entityId])
-								if(!res)
-									sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["",it.id])
+								sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["",it.id])
 								break;
 							default:
 								break;
@@ -285,7 +289,11 @@ class ReplicaService {
 							sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["",it.id])
 						break
 					case 'DELETE':
-						targetSql.execute("DELETE FROM ${config.tableName} WHERE ${config.pk}=?",[it.entityId.toLong()])
+						if(['SX_LP_PROVS','SX_LP_PROVS_DET','SX_LP_CLIENTE_DET','SX_LP_CLIENTE'].contains(config.tableName)){
+							targetSql.execute("DELETE FROM ${config.tableName} WHERE ${config.pk}=?",[it.entityId.toLong()])
+						}else{
+							targetSql.execute("DELETE FROM ${config.tableName} WHERE ${config.pk}=?",[it.entityId])
+						}
 						sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["",it.id])
 						break;
 					default:
