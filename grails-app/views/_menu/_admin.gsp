@@ -6,8 +6,18 @@
 		</a>
 		<ul class="dropdown-menu">
 			<li class="">
-				<a tabindex="-1" href="#"><b>Technical Admin</b></a>
+				<a tabindex="-1" href="#"><b>Rutinas de control</b></a>
 			</li>
+			<li class="dropdown-submenu">
+				<a tabindex="-1" href="#">
+					<i class="icon-sitemap"></i>
+					Sistemas
+				</a>
+				<ul class="dropdown-menu">
+					<li class="controller"><g:link controller="solicitudDeDepositos">Solicitud de Depositos</g:link></li>
+				</ul>
+			</li>
+			
 			<g:if env="development">
 			<li class="">
 				<a href="${createLink(uri: '/dbconsole')}">
@@ -22,10 +32,11 @@
 					<g:message code="default.systeminfo.label"/>
 				</a>
 			</li>
+			
 			<li class="dropdown-submenu">
 				<a tabindex="-1" href="#">
 					<i class="icon-sitemap"></i>
-					All Controller
+					Controladores
 				</a>
 				<ul class="dropdown-menu">
 					<li class="controller"><g:link controller="home">HomeController</g:link></li>

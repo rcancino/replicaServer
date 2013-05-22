@@ -24,5 +24,10 @@
 				Quartz
 			</g:link>
 		</li>
+		<li>
+			<g:link controller="sistemasAdmin" >
+				Sistemas
+			</g:link>
+		</li>
 	</ul>
 </div>
