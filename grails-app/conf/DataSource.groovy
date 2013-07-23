@@ -15,7 +15,7 @@ environments {
 		
 		dataSource {
 			dbCreate = "update"
-			url = "jdbc:mysql://10.10.1.221/produccion"
+			url = "jdbc:mysql://10.10.1.228/produccion"
 			driverClassName = "com.mysql.jdbc.Driver"
 			dialect = org.hibernate.dialect.MySQL5InnoDBDialect
 			username = "root"
@@ -32,7 +32,7 @@ environments {
         dataSource {
 			pooled = true
 			dbCreate = "update"
-			url = "jdbc:mysql://10.10.1.221/produccion"
+			url = "jdbc:mysql://10.10.1.228/produccion"
 			driverClassName = "com.mysql.jdbc.Driver"
 			dialect = org.hibernate.dialect.MySQL5InnoDBDialect
 			username = "root"
@@ -47,6 +47,6 @@ environments {
 				maxWait = 10000
 				validationQuery = "/* ping */"
 			}
-}
+		}
     }
 }

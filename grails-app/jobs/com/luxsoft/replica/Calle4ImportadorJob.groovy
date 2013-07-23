@@ -30,8 +30,8 @@ class Calle4ImportadorJob {
 		def dataMap= context.mergedJobDataMap
 		int count = dataMap.errorCount?:0;
 		
-		// allow 5 retries
-		if(count >= 20){
+		// allow 5 retries 
+		if(count >= 30){
 			log.info 'Errores reportados por importador sobre pasa el limite, se parara el proceso:'
 			JobExecutionException e = new JobExecutionException("Intentos excedidos "+dataMap.errorMessage);
 			//make sure it doesn't run again

@@ -74,7 +74,12 @@ class ReplicaService {
 		//println "Importando logs De $origen a $destino Audits: ${rows.size()}"
 		//log.info("Importando logs De $origen a $destino Audits: ${rows.size()}")
 		
-		sourceSql.eachRow("select * from audit_log where replicado is null order by id") {
+		//sourceSql.eachRow("select * from audit_log where replicado is null and entityName!='Existencia' order by id") {
+		sourceSql.eachRow("""
+							select * from audit_log where replicado is null and tableName<>'SX_EXISTENCIAS'
+							UNION
+							select * from audit_log where replicado is null and tableName='SX_EXISTENCIAS'
+						  """) {
 		
 			//println 'Importando con audit: '+it
 			def config=EntityConfiguration.findByName(it.entityName)
@@ -141,7 +146,7 @@ class ReplicaService {
 					} catch (DuplicateKeyException dk) {
 						println dk.getMessage()
 						log.info "Registro duplicado"
-						sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["Registri duplicado",it.id])
+						sourceSql.execute("UPDATE AUDIT_LOG SET REPLICADO=NOW(),MESSAGE=? WHERE ID=? ", ["Registro duplicado",it.id])
 					
 					}catch (Exception e){
 						//e.printStackTrace()
@@ -176,6 +181,7 @@ class ReplicaService {
 				}
 			}
 		}
+		
 	}
 	
 	/**
@@ -185,7 +191,7 @@ class ReplicaService {
 	 */
 	private afterImport(def config,def dataRow,def auditRow,def sourceSql){
 		
-		
+		//Genera AuditLog para un registro que proviene de una sucursal y el destino es otra sucursal "No oficinas" Ej. Solicitud de traslados y traslados
 		if(auditRow.sucursal_destino!='OFICINAS'){
 			log.debug 'Dispersando a :'+auditRow.sucursal_destino
 			def auditLog=new AuditLog(
@@ -199,7 +205,7 @@ class ReplicaService {
 				,ip: auditRow.ip,)
 				.save(failOnError:true)
 		}
-		
+		//Dispersar Clientes y Existencias Despues de la importacion 
 		switch (config.name) {
 		case 'Existencia':
 			log.info("Dispersando existencia")
@@ -208,6 +214,16 @@ class ReplicaService {
 		case 'Cliente':
 			log.info("Dispersando clientes")
 			//auditRow.action='INSERT'
+			//iMPORTANDO TELEFONOS DEL CLIENTE
+			def rows=sourceSql.rows("SELECT * FROM SX_CLIENTES_TELS WHERE CLIENTE_ID=?",[auditRow.entityId])
+			
+			if(rows){
+				def oficinasDataSource=dataSourceLookup.getDataSource('oficinasDataSource')
+				SimpleJdbcInsert insert=new SimpleJdbcInsert(oficinasDataSource).withTableName("SX_CLIENTES_TELS")
+				rows.each { row->
+					def ok=insert.execute(row)
+				}
+			}
 			dispersar(config, dataRow,auditRow)
 			break;
 		default:
@@ -223,7 +239,7 @@ class ReplicaService {
 		if(config.name=='Cliente')
 			action='INSERT'
 		destinos.each{destino->
-			if(destino!=auditRow.sucursal_origen){
+			if(destino.nombre.trim()!=auditRow.sucursal_origen.trim()){
 				log.debug 'Dispersando a :'+destino
 				def auditLog=new AuditLog(
 					action: action
@@ -231,11 +247,12 @@ class ReplicaService {
 					,entityName: auditRow.entityName
 					,tableName: auditRow.tableName
 					,sucursalOrigen: auditRow.sucursal_origen
-					,sucursalDestino: destino
+					,sucursalDestino: destino.nombre
 					,ip: auditRow.ip,)
 					.save(failOnError:true)
 			}else{
 				//log.debug 'Ignorando dispersion a :'+destino
+				println 'Ignorando disperción: '+destino
 			}
 		}
 			
@@ -391,6 +408,6 @@ class ReplicaService {
 		}
 		return destinos
 		*/
-		return  Sucursal.findAllByActivaAndNombreNotEqual('true','OFICINAS').collect({it.nombre})
+		return  Sucursal.findAllByActivaAndNombreNotEqual('true','OFICINAS')
 	}
 }

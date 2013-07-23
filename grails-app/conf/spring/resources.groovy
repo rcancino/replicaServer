@@ -26,11 +26,11 @@ beans = {
 		
 		oficinasDataSource(){bean->
 			bean.parent = abstractDataSource
-			url = 'jdbc:mysql://10.10.1.221/produccion'
+			url = 'jdbc:mysql://10.10.1.228/produccion'
 		}
 		tacubaDataSource(){bean->
 			bean.parent = abstractDataSource
-			url = 'jdbc:mysql://10.10.1.101/tacuba_produccion'
+			url = 'jdbc:mysql://10.10.1.101/produccion'
 		}
 		andradeDataSource(){bean->
 			bean.parent = abstractDataSource
@@ -58,12 +58,13 @@ beans = {
 		case Environment.DEVELOPMENT:
 			oficinasDataSource(){bean->
 				bean.parent = abstractDataSource
-				url = 'jdbc:mysql://10.10.1.221/produccion'
+				url = 'jdbc:mysql://10.10.1.228/produccion'
 			}
 			tacubaDataSource(){bean->
 				bean.parent = abstractDataSource
-				url = 'jdbc:mysql://10.10.1.101/tacuba_produccion'
+				url = 'jdbc:mysql://10.10.1.101/produccion'
 			}
+			
 			andradeDataSource(){bean->
 				bean.parent = abstractDataSource
 				url = 'jdbc:mysql://10.10.2.1/produccion'

@@ -1,5 +1,5 @@
 <%--Input field para campos de tipo fecha --%>
-<r:require module="jquery-ui"/>
+
 <div class="input-prepend">
 	<%-- <bs:datePicker id="${id}" name="${property}" precision="day"  value="${value}" noSelection="['': '']" />--%>
 	<input class="datepicker" type="text" id="${property}" name="${property}" value="${formatDate(format:'dd/MM/yyyy',date:value)}"/>
