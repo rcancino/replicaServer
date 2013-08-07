@@ -18,6 +18,7 @@ class AjusteDeDestinosJob {
 
     def execute() {
 		def pendientes=AuditLog.findAllByEntityNameAndSucursalDestino('AutorizacionDeAbono','ND')
+		
 		pendientes.each{audit->
 			println 'Ajustando :'+audit
 			def ds=dataSourceLookup.getDataSource('oficinasDataSource')
@@ -35,6 +36,8 @@ class AjusteDeDestinosJob {
 			}
 			audit.save(flush:true)
 		}
+		
+	   ajusteAutorizacionAplicacionCxc()
        ajusteCalle4()
 	   ajusteVertiz()
     }
@@ -52,6 +55,28 @@ class AjusteDeDestinosJob {
 		errores.each{audit->
 			println 'Ajustando :'+audit
 			audit.sucursalDestino='VERTIZ'
+		}
+	}
+	
+	private ajusteAutorizacionAplicacionCxc(){
+		def pendientes=AuditLog.findAllByEntityNameAndSucursalDestino('AutorizacionDeAplicacionCxC','ND')
+		
+		pendientes.each{audit->
+			println 'Ajustando :'+audit
+			def ds=dataSourceLookup.getDataSource('oficinasDataSource')
+			def sql=new Sql(ds)
+			def destino=sql.firstRow("select z.nombre from sx_cxc_aplicaciones x join sw_sucursales z on x.car_sucursal=z.nombre  where x.AUTORIZACION_ID=?"
+					,[audit.entityId])
+			println '********* DESTINO: '+destino
+			if("CALLE 4".trim()==destino?.nombre)
+				audit.sucursalDestino='CALLE4'
+			else if("VERTIZ 176"==destino?.nombre){
+				destino="VERTIZ"
+				audit.sucursalDestino='VERTIZ'
+			}else{
+				audit.sucursalDestino=destino?.nombre
+			}
+			audit.save(flush:true)
 		}
 	}
 }
