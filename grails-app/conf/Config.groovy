@@ -111,7 +111,7 @@ log4j = {
 			error 'grails.app'//,'com.luxsoft.replica'
 			
 			info  'grails.app.services'
-			debug rollingFile: 'grails.app.jobs'
+			//debug rollingFile: 'grails.app.jobs'
 		}
 	}
 			

@@ -1,7 +1,7 @@
 import grails.util.Environment
 import org.apache.commons.dbcp.BasicDataSource
-import org.springframework.batch.core.scope.StepScope;
-import org.springframework.batch.item.database.HibernateItemWriter;
+
+
 import org.springframework.jdbc.datasource.SingleConnectionDataSource
 import org.springframework.jdbc.datasource.lookup.BeanFactoryDataSourceLookup
 import org.springframework.orm.hibernate3.HibernateTemplate;
@@ -52,6 +52,10 @@ beans = {
 			bean.parent = abstractDataSource
 			url = 'jdbc:mysql://10.10.5.1/produccion'
 		}
+		bellavistaDataSource(){bean->
+			bean.parent = abstractDataSource
+			url = 'jdbc:mysql://10.10.1.9/promasa'
+		}
 	break
 		case Environment.TEST:			
 		break
@@ -85,12 +89,16 @@ beans = {
 				bean.parent = abstractDataSource
 				url = 'jdbc:mysql://10.10.5.1/produccion'
 			}
+			bellavistaDataSource(){bean->
+				bean.parent = abstractDataSource
+				url = 'jdbc:mysql://10.10.1.9/promasa'
+			}
 		break
 	}
 
 	dataSourceLookup(BeanFactoryDataSourceLookup){}
 	
-	stepScope(StepScope){}
+	
 	
 	
 
