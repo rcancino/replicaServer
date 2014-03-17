@@ -226,6 +226,10 @@ class ReplicaService {
 			}
 			dispersar(config, dataRow,auditRow)
 			break;
+		case 'CFDIClienteMails':
+			log.info('Dispersando correo  para cfdi de clientes')
+			dispersar(config,dataRow,auditRow)
+			break
 		default:
 			break;
 		}

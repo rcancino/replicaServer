@@ -5,7 +5,6 @@ import groovy.sql.Sql
 
 
 class AjusteDeDestinosJob {
-	
 	def dataSourceLookup
 	
 	def concurrent = false
@@ -13,7 +12,7 @@ class AjusteDeDestinosJob {
 	static transactional = false
 	
     static triggers = {
-      simple repeatInterval: 15000l // execute job once in 5 seconds
+      simple repeatInterval: 15000L // execute job once in 5 seconds
     }
 
     def execute() {
@@ -40,6 +39,9 @@ class AjusteDeDestinosJob {
 	   ajusteAutorizacionAplicacionCxc()
        ajusteCalle4()
 	   ajusteVertiz()
+	// Metodo para dispersar
+	   ajustaDestinoParaDispersar()
+
     }
 	
 	private ajusteCalle4(){
@@ -79,4 +81,34 @@ class AjusteDeDestinosJob {
 			audit.save(flush:true)
 		}
 	}
+	
+	//Metodo que busca un auditLog con sucursal destino TODAS y genera auditLog para cada una de las sucursales. Evaluar si se quita el de clientes
+	
+	private ajustaDestinoParaDispersar(){
+		def pendientes=AuditLog.findAllBySucursalDestinoAndReplicadoIsNull('TODAS')
+		println 'Registros a dispersar: ***********'+pendientes
+		
+		pendientes.each{auditRow->
+			
+			def sucursales=Sucursal.findAllByActivaAndNombreNotEqual('true','OFICINAS').collect({it.nombre})
+			
+			sucursales.each { sucursal->
+				
+				new AuditLog(
+					entityName:auditRow.entityName
+					,entityId:auditRow.entityId
+					,action:'UPDATE'
+					,tableName:auditRow.tableName
+					,sucursalOrigen:'OFICINAS'
+					,sucursalDestino:sucursal).save()
+				
+			}
+			auditRow.replicado=new Date()
+			//auditRow.save(flush:true)
+		}
+	}
+	
+	
+	
+	
 }
