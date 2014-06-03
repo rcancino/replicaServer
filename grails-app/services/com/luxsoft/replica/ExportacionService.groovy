@@ -17,6 +17,7 @@ class ExportacionService {
 	def exportadorDeClientes=new ExportadorDeClientes()
 	def exportadorDeProveedoes=new ExportadorDeProveedores()
 	def exportadorTPE=new ExportadorTPE()
+	def exportadordeUsuarios =new ExportadorDeUsuarios()
 	
 	
 	
@@ -64,11 +65,15 @@ class ExportacionService {
 		case "Proveedor":
 			exportadorDeProveedoes.exportarCollecciones(row.PROVEEDOR_ID,sourceSql,targetSql)
 			break
-			case "TrasladoDet":
+		case "TrasladoDet":
 			if(row.TIPO=='TPE'){
 				//exportadorTPE.acutalizarExistencias(row,targetSql)
 			}
 			break
+		/*case "User":
+			println "exportando Usuarios"
+			exportadordeUsuarios.exportarCollecciones(row.ID,sourceSql,targetSql)
+			break*/
 		default: 
 			break;
 		}
