@@ -18,7 +18,7 @@ class ActualizadorDeClientesJob {
 
     def execute() {
 		
-		def pendientes=AuditLog.findAllByEntityNameAndSucursalDestinoAndReplicadoIsNull('Cliente','TODAS')
+		/*def pendientes=AuditLog.findAllByEntityNameAndSucursalDestinoAndReplicadoIsNull('Cliente','TODAS')
 		println 'Clientes pendientes: ***********'+pendientes
 		
 		pendientes.each{auditRow->
@@ -26,7 +26,7 @@ class ActualizadorDeClientesJob {
 			def sucursales=Sucursal.findAllByActivaAndNombreNotEqual('true','OFICINAS').collect({it.nombre})
 			
 			sucursales.each { sucursal->
-				
+				println "Generando registro de Audit para : "+ sucursal
 				new AuditLog(
 					entityName:'Cliente'
 					,entityId:auditRow.entityId
@@ -48,9 +48,11 @@ class ActualizadorDeClientesJob {
 						,sucursalDestino:sucursal).save()
 				}
 			}
+			
+			println "Actualizando AuditRow"+ auditRow.id
 			auditRow.replicado=new Date()
 			//auditRow.save(flush:true)
-		}
+		}*/
 		
     }
 	

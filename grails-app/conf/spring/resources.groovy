@@ -6,6 +6,7 @@ import org.springframework.jdbc.datasource.SingleConnectionDataSource
 import org.springframework.jdbc.datasource.lookup.BeanFactoryDataSourceLookup
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
+
 // Place your Spring DSL code here
 beans = {
 	customPropertyEditorRegistrar(CustomDateEditorRegistrar)
@@ -52,9 +53,9 @@ beans = {
 			bean.parent = abstractDataSource
 			url = 'jdbc:mysql://10.10.5.1/produccion'
 		}
-		bellavistaDataSource(){bean->
+		solisDataSource(){bean->
 			bean.parent = abstractDataSource
-			url = 'jdbc:mysql://10.10.1.9/promasa'
+			url = 'jdbc:mysql://10.10.8.1/produccion'
 		}
 	break
 		case Environment.TEST:			
@@ -89,9 +90,9 @@ beans = {
 				bean.parent = abstractDataSource
 				url = 'jdbc:mysql://10.10.5.1/produccion'
 			}
-			bellavistaDataSource(){bean->
+			solisDataSource(){bean->
 				bean.parent = abstractDataSource
-				url = 'jdbc:mysql://10.10.1.9/promasa'
+				url = 'jdbc:mysql://10.10.8.1/produccion'
 			}
 		break
 	}

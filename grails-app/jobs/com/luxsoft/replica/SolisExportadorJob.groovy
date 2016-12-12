@@ -11,14 +11,14 @@ import org.quartz.PersistJobDataAfterExecution;
 
 @DisallowConcurrentExecution
 @PersistJobDataAfterExecution
-class BellaVistaExportadorJob {
+class SolisExportadorJob {
 	
 	def concurrent = false
 	def dataSourceLookup
 	def replicaService
 	
-	def group = "BELLAVISTA-REPLICA"
-	static sucursalName="BELLAVISTA"
+	def group = "SOLIS-REPLICA"
+	static sucursalName="SOLIS"
 	
 	static triggers = {
 		simple name:sucursalName+'-EXPORTADOR',startDelay:6000l, repeatInterval: 10000l // execute job once in 5 seconds

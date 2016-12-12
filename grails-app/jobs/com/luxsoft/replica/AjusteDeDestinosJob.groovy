@@ -93,7 +93,7 @@ class AjusteDeDestinosJob {
 			def sucursales=Sucursal.findAllByActivaAndNombreNotEqual('true','OFICINAS').collect({it.nombre})
 			
 			sucursales.each { sucursal->
-				
+				println "Generando Registro Audit desde Ajuste Destinos para :"+sucursal
 				new AuditLog(
 					entityName:auditRow.entityName
 					,entityId:auditRow.entityId
@@ -103,6 +103,7 @@ class AjusteDeDestinosJob {
 					,sucursalDestino:sucursal).save()
 				
 			}
+			println "Actualizando Audit Row desde Ajuste Destinos"+auditRow.id
 			auditRow.replicado=new Date()
 			//auditRow.save(flush:true)
 		}

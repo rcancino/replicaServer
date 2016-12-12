@@ -66,9 +66,9 @@ class ExportacionService {
 			exportadorDeProveedoes.exportarCollecciones(row.PROVEEDOR_ID,sourceSql,targetSql)
 			break
 		case "TrasladoDet":
-			if(row.TIPO=='TPE'){
-				//exportadorTPE.acutalizarExistencias(row,targetSql)
-			}
+			//if(row.TIPO=='TPE'){
+				exportadorTPE.acutalizarExistencias(row,targetSql)
+			//}
 			break
 		/*case "User":
 			println "exportando Usuarios"

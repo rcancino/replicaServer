@@ -75,8 +75,7 @@ class ReplicaService {
 		//log.info("Importando logs De $origen a $destino Audits: ${rows.size()}")
 		
 		//sourceSql.eachRow("select * from audit_log where replicado is null and entityName!='Existencia' order by id") {
-		sourceSql.eachRow("""
-							select * from audit_log where replicado is null and tableName<>'SX_EXISTENCIAS'
+		sourceSql.eachRow("""select * from audit_log where replicado is null and tableName<>'SX_EXISTENCIAS' and  SUCURSAL_ORIGEN<>if(SUCURSAL_DESTINO='CALLE 4','CALLE4',if(SUCURSAL_DESTINO='VERTIZ 176','VERTIZ',SUCURSAL_DESTINO))
 							UNION
 							select * from audit_log where replicado is null and tableName='SX_EXISTENCIAS'
 						  """) {
@@ -349,9 +348,9 @@ class ReplicaService {
 			exportadorDeProveedoes.exportarCollecciones(row.PROVEEDOR_ID,sourceSql,targetSql)
 			break
 			case "TrasladoDet":
-			if(row.TIPO=='TPE'){
+			//if(row.TIPO=='TPE'){
 				exportadorTPE.acutalizarExistencias(row,targetSql)
-			}
+			//}
 			break
 		default: 
 			break;

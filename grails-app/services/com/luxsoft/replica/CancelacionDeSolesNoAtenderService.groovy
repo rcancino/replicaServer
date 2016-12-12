@@ -16,7 +16,7 @@ class CancelacionDeSolesNoAtenderService {
 	
 	def borrarSolesOrigen(){
 		
-		def suc=[3L:'TACUBA',6L:'ANDRADE',9L:'CF5FEBRERO',5L:'BOLIVAR',2L:'CALLE4',11L:'VERTIZ',13L:'BELLAVISTA']
+		def suc=[3L:'TACUBA',6L:'ANDRADE',9L:'CF5FEBRERO',5L:'BOLIVAR',2L:'CALLE4',11L:'VERTIZ',13L:'BELLAVISTA',14L:'SOLIS']
 		
 		
 //		
@@ -38,8 +38,8 @@ class CancelacionDeSolesNoAtenderService {
 						def sql="""
 			SELECT S.SOL_ID,U.NOMBRE,S.SUCURSAL_ID,S.FECHA,S.ORIGEN_ID FROM sx_solicitud_traslados s left join sx_traslados t on (t.SOL_ID=s.SOL_ID)
 			join sw_sucursales u on (s.origen_id=u.sucursal_id)
-			where t.TRASLADO_ID is null and U.nombre=? and s.fecha>='2015/04/30' AND S.FECHA< CURRENT_DATE-1  and s.NO_ATENDER is true
-            AND S.COMENTARIO NOT LIKE 'CANC%'
+			where t.TRASLADO_ID is null and (CASE WHEN U.nombre='CALLE 4' THEN 'CALLE4' ELSE U.NOMBRE END )=? and s.fecha>='2015/04/30' AND S.FECHA<= CURRENT_DATE AND  s.NO_ATENDER is true
+			AND (S.COMENTARIO NOT LIKE 'CANC%' OR S.COMENTARIO IS NULL)
 		"""
 						def rows=targetSql.rows(sql,sucursal.nombre)
 				//	def rows=targetSql.rows(sql)
@@ -71,26 +71,26 @@ class CancelacionDeSolesNoAtenderService {
 				 println "conectando a  OFICINAS..."
 				  
 								 
-			//	 def deletePartidas="DELETE FROM SX_SOLICITUD_TRASLADOSDET WHERE SOL_ID=?"
-			//	 def  deleteMaestro="DELETE FROM SX_SOLICITUD_TRASLADOS WHERE SOL_ID=?"
+				 def deletePartidas="DELETE FROM SX_SOLICITUD_TRASLADOSDET WHERE SOL_ID=?"
+				 def  deleteMaestro="DELETE FROM SX_SOLICITUD_TRASLADOS WHERE SOL_ID=?"
 				def cancelacionMaestro="UPDATE SX_SOLICITUD_TRASLADOS SET COMENTARIO = 'CANCELACION AUTOMATICA' WHERE SOL_ID=?"
 				 
 				  
 				 println "Borrando en la Sucursal que atiende"+sucursal.nombre 
 				 
 				 	targetSql.execute(cancelacionMaestro,sol.SOL_ID)
-				   // targetSql.execute( deletePartidas,sol.SOL_ID)
+				    targetSql.execute( deletePartidas,sol.SOL_ID)
 					//targetSql.execute(deleteMaestro, sol.SOL_ID)
 				 
 				 println "Borrando en la sucursal que solicita"+sucursalSolicitante.nombre
 				 
 				    origenSql.execute(cancelacionMaestro,sol.SOL_ID)
-				 //	origenSql.execute( deletePartidas,sol.SOL_ID)
+				 	origenSql.execute( deletePartidas,sol.SOL_ID)
 				//	origenSql.execute(deleteMaestro, sol.SOL_ID)
 				 
 				 println "Borrando en Central - Oficinas"
 				    centralSql.execute(cancelacionMaestro,sol.SOL_ID)
-				 //	centralSql.execute( deletePartidas,sol.SOL_ID)
+				 	centralSql.execute( deletePartidas,sol.SOL_ID)
 				//	centralSql.execute(deleteMaestro, sol.SOL_ID)
 				 
 			}

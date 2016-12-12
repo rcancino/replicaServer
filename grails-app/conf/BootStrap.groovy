@@ -29,7 +29,8 @@ class BootStrap {
 		def calle4=Sucursal.findOrSaveWhere(nombre:"CALLE4",dataSourceName:'calle4DataSource')
 		def cincoFebrero=Sucursal.findOrSaveWhere(nombre:"CF5FEBRERO",dataSourceName:'cincoFebreroDataSource')
 		def vertiz=Sucursal.findOrSaveWhere(nombre:"VERTIZ",dataSourceName:'vertizDataSource')
-		def bellavista=Sucursal.findOrSaveWhere(nombre:"BELLAVISTA",dataSourceName:'bellavistaDataSource')
+		//def bellavista=Sucursal.findOrSaveWhere(nombre:"BELLAVISTA",dataSourceName:'bellavistaDataSource')
+		def solis=Sucursal.findOrSaveWhere(nombre:"SOLIS",dataSourceName:'solisDataSource')
 		
 		
     }

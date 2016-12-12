@@ -20,6 +20,20 @@ class Periodo {
 		
 	}
 	
+	public static int obtenerMes(Date d){
+		Calendar c=Calendar.getInstance();
+		c.setTime(d);
+		int mes=c.get(Calendar.MONTH);
+		return mes;
+	}
+	
+	public static int obtenerYear(Date d){
+		Calendar c=Calendar.getInstance();
+		c.setTime(d);
+		int year=c.get(Calendar.YEAR);
+		return year;
+	}
+	
 	public String toString(){
 		return "${fechaInicial} al ${fechaFinal}" 
 	} 

@@ -50,7 +50,7 @@ class VentasPorFacturista {
 		
 	}
 	
-	def sucursales=['tacubaDataSource':3L,'andradeDataSource':6L,'cincoFebreroDataSource':9L,'bolivarDataSource':5L,'calle4DataSource':2L,'vertizDataSource':11L]
+	def sucursales=['tacubaDataSource':3L,'andradeDataSource':6L,'cincoFebreroDataSource':9L,'bolivarDataSource':5L,'calle4DataSource':2L,'vertizDataSource':11L,'solisDataSource':14L]
 	
 	
 	static def VENTAS_X_FAC_SQL="""
