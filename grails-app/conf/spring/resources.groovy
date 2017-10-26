@@ -94,6 +94,14 @@ beans = {
 				bean.parent = abstractDataSource
 				url = 'jdbc:mysql://10.10.8.1/produccion'
 			}
+			bellavistaDataSource(){bean->
+				bean.parent = abstractDataSource
+				url = 'jdbc:mysql://10.10.1.9/bellavista'
+			}
+			alesaDataSource(){bean->
+				bean.parent = abstractDataSource
+				url = 'jdbc:mysql://10.10.1.9/alesa'
+			}
 		break
 	}
 
